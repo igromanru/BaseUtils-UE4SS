@@ -58,8 +58,8 @@ local function GetActorFromHitResult(HitResult)
 end
 
 ---comment
----@param TraceChannel ECollisionChannel? (Default: 1) It's actually ETraceTypeQuery enum but ECollisionChannel members are named according to their type (0 = WorldStatic, 1 = WorldDynamic, 2 = Pawn, 3 = Visibility)
----@param LengthInM float? (Default: 20) Trace line length in meter 
+---@param TraceChannel ECollisionChannel|number|nil (Default: 1) It's actually ETraceTypeQuery enum but ECollisionChannel members are named according to their type (0 = WorldStatic, 1 = WorldDynamic, 2 = Pawn, 3 = Visibility)
+---@param LengthInM number|nil (Default: 20) Trace line length in meter 
 ---@return AActor|nil #Actor from hit result
 function ForwardLineTraceByChannel(TraceChannel, LengthInM)
     TraceChannel = TraceChannel or 1 -- WorldDynamic
@@ -76,7 +76,7 @@ function ForwardLineTraceByChannel(TraceChannel, LengthInM)
         local worldContext = playerController.Pawn or playerController
         local actorsToIgnore = {}
         local outHitResult = {}
-        if GetKismetSystemLibrary():LineTraceSingle(worldContext, startLocation, endLocation, TraceChannel, actorsToIgnore, 0, outHitResult, true, traceColor, traceColor, 0.0) then
+        if GetKismetSystemLibrary():LineTraceSingle(worldContext, startLocation, endLocation, TraceChannel, false, actorsToIgnore, 0, outHitResult, true, traceColor, traceColor, 0.0) then
             return GetActorFromHitResult(outHitResult)
         end
     end
