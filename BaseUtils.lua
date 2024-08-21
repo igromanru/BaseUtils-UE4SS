@@ -23,19 +23,26 @@ function LogDebug(Message)
 end
 
 function LogError(Message)
-    error(string.format("%s %s\n", GetModInfoPrefix(), Message))
+    print(string.format("[Error] %s %s\n", GetModInfoPrefix(), Message))
 end
 
+function LogDebugError(Message)
+    if DebugMode then
+        LogError(Message)
+    end
+end
+
+
 ---comment Converts UE units (centimeter) to meters
----@param Units any
----@return any
+---@param Units number
+---@return number
 function UnitsToM(Units)
     return Units / 100
 end
 
 ---comment Converts meters to UE units (centimeter)
----@param Meters any
----@return any
+---@param Meters number
+---@return number
 function MToUnits(Meters)
     return Meters * 100
 end
