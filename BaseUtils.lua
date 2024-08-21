@@ -32,7 +32,6 @@ function LogDebugError(Message)
     end
 end
 
-
 ---comment Converts UE units (centimeter) to meters
 ---@param Units number
 ---@return number
@@ -83,7 +82,27 @@ function GetMyPlayer()
     return nil
 end
 
-local function GetActorFromHitResult(HitResult)
+---Finds specific UActorComponent in BlueprintCreatedComponents array
+---@param Actor AActor
+---@param Class UClass
+---@return UActorComponent?
+function GetBlueprintCreatedComponentByClass(Actor, Class)
+    if Actor and Class and Actor:IsValid() and Class:IsValid() then
+        for i = 1, #Actor.BlueprintCreatedComponents, 1 do
+            local component = Actor.BlueprintCreatedComponents[i]
+            if component:IsValid() and component:IsA(Class) then
+                return component
+            end
+        end
+    end
+
+    return nil
+end
+
+---Returns hit actor from FHitResult, it handles the struct differance between UE4 and UE5
+---@param HitResult FHitResult
+---@return AActor|nil
+function GetActorFromHitResult(HitResult)
     if not HitResult then return nil end
 
     local actor = nil
