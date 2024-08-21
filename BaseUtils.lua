@@ -40,6 +40,42 @@ function MToUnits(Meters)
     return Meters * 100
 end
 
+local MyPlayerControllerCache = nil
+---Returns main APlayerController
+---@return APlayerController?
+function GetMyPlayerController()
+    if MyPlayerControllerCache and MyPlayerControllerCache:IsValid() then return MyPlayerControllerCache end
+    MyPlayerControllerCache = nil
+
+    local playerControllers = FindAllOf("PlayerController")
+    if playerControllers and type(playerControllers) == 'table' then 
+        for _, controller in pairs(playerControllers) do
+            if controller.Pawn:IsValid() and controller.Pawn:IsPlayerControlled() then
+                MyPlayerControllerCache = controller
+                break
+            end
+        end
+    end
+    
+    return MyPlayerControllerCache
+end
+
+---Returns currently controlled pawn (usually the player chracter)
+---@return APawn?
+function GetMyPlayer()
+    local playerController = GetMyPlayerController()
+    local player = nil
+
+    if playerController then
+        player = playerController.Pawn
+    end
+    if player and player:IsValid() then
+        return player
+    end
+
+    return nil
+end
+
 local function GetActorFromHitResult(HitResult)
     if not HitResult then return nil end
 
@@ -57,7 +93,7 @@ local function GetActorFromHitResult(HitResult)
     return nil
 end
 
----comment
+---Fires a line trace in front of the camera that collides with objects based on collision channel
 ---@param TraceChannel ECollisionChannel|number|nil (Default: 1) It's actually ETraceTypeQuery enum but ECollisionChannel members are named according to their type (0 = WorldStatic, 1 = WorldDynamic, 2 = Pawn, 3 = Visibility)
 ---@param LengthInM number|nil (Default: 20) Trace line length in meter 
 ---@return AActor|nil #Actor from hit result
@@ -65,15 +101,19 @@ function ForwardLineTraceByChannel(TraceChannel, LengthInM)
     TraceChannel = TraceChannel or 1 -- WorldDynamic
     LengthInM = LengthInM or 20.0
 
-    local playerController = UEHelpers.GetPlayerController()
-    if playerController and playerController.PlayerCameraManager then
+    local playerController = GetMyPlayerController()
+    if playerController and playerController.PlayerCameraManager:IsValid() then
         local cameraManager = playerController.PlayerCameraManager
         local lookDirection = cameraManager:GetActorForwardVector()
         local lookDirOffset = GetKismetMathLibrary():Multiply_VectorFloat(lookDirection, MToUnits(LengthInM))
         local startLocation = cameraManager:GetCameraLocation()
         local endLocation = GetKismetMathLibrary():Add_VectorVector(startLocation, lookDirOffset)
         local traceColor = { R = 0, G = 0, B = 0, A = 0 }
-        local worldContext = playerController.Pawn or playerController
+        local worldContext = playerController
+        if playerController.Pawn:IsValid() then
+            -- Set Pawn as WorldContext to ignore own player with bIgnoreSelf parameter
+            worldContext = playerController.Pawn
+        end
         local actorsToIgnore = {}
         local outHitResult = {}
         if GetKismetSystemLibrary():LineTraceSingle(worldContext, startLocation, endLocation, TraceChannel, false, actorsToIgnore, 0, outHitResult, true, traceColor, traceColor, 0.0) then
