@@ -32,6 +32,24 @@ function LogDebugError(Message)
     end
 end
 
+---Returns FVector as string format "X: %f, Y: %f, Z: %f"
+---@param Vector FVector
+---@return string
+function VectorToString(Vector)
+    return string.format("X: %f, Y: %f, Z: %f", Vector.X, Vector.Y, Vector.Z)
+end
+
+---Converts FVector to a lua table
+---@param Vector FVector
+---@return table
+function VectorToUserdata(Vector)
+    return {
+        X = Vector.X,
+        Y = Vector.Y,
+        Z = Vector.Z
+    }
+end
+
 ---comment Converts UE units (centimeter) to meters
 ---@param Units number
 ---@return number
