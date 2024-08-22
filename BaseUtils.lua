@@ -75,7 +75,9 @@ local MyPlayerControllerCache = nil
 ---Returns main APlayerController
 ---@return APlayerController?
 function GetMyPlayerController()
-    if MyPlayerControllerCache and MyPlayerControllerCache:IsValid() then return MyPlayerControllerCache end
+    if MyPlayerControllerCache and MyPlayerControllerCache:IsValid() then
+        return MyPlayerControllerCache
+    end
     MyPlayerControllerCache = nil
 
     local playerControllers = FindAllOf("PlayerController")
