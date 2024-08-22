@@ -50,6 +50,13 @@ function VectorToUserdata(Vector)
     }
 end
 
+---Checks if FVector is equal to 0, 0, 0
+---@param Vector FVector
+---@return boolean
+function IsEmptyVector(Vector)
+    return Vector.X == 0 and Vector.Y == 0 and Vector.Z == 0
+end
+
 ---comment Converts UE units (centimeter) to meters
 ---@param Units number
 ---@return number
