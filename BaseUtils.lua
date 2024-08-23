@@ -57,6 +57,31 @@ function IsEmptyVector(Vector)
     return Vector.X == 0 and Vector.Y == 0 and Vector.Z == 0
 end
 
+---Returns FVector2D as string format "X: %f, Y: %f"
+---@param Vector2D FVector2D
+---@return string
+function Vector2DToString(Vector2D)
+    return string.format("X: %f, Y: %f", Vector2D.X, Vector2D.Y)
+end
+
+---Converts FVector2D to a lua table
+---@param Vector2D FVector2D
+---@return table
+function Vector2DToUserdata(Vector2D)
+    return {
+        X = Vector2D.X,
+        Y = Vector2D.Y
+    }
+end
+
+---Checks if FVector is equal to 0, 0
+---@param Vector2D FVector2D
+---@return boolean
+function IsEmptyVector2D(Vector2D)
+    return not Vector2D or (Vector2D.X == 0 and Vector2D.Y == 0)
+end
+
+
 ---comment Converts UE units (centimeter) to meters
 ---@param Units number
 ---@return number
