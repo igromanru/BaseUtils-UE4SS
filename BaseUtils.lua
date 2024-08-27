@@ -7,6 +7,7 @@ GetKismetMathLibrary = UEHelpers.GetKismetMathLibrary
 ModName = "BaseUtils"
 ModVersion = "1.0.0"
 DebugMode = false
+IsModEnabled = false
 
 function GetModInfoPrefix()
     return string.format("[%s v%s]", ModName, ModVersion)
