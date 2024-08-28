@@ -13,23 +13,23 @@ function GetModInfoPrefix()
     return string.format("[%s v%s]", ModName, ModVersion)
 end
 
-function LogInfo(Message)
-    print(string.format("%s %s\n", GetModInfoPrefix(), Message))
+function LogInfo(Message, ...)
+    print(string.format("%s %s\n", GetModInfoPrefix(), Message), ...)
 end
 
-function LogDebug(Message)
+function LogDebug(Message, ...)
     if DebugMode then
-        LogInfo(Message)
+        LogInfo(Message, ...)
     end
 end
 
-function LogError(Message)
-    print(string.format("[Error] %s %s\n", GetModInfoPrefix(), Message))
+function LogError(Message, ...)
+    print(string.format("[Error] %s %s\n", GetModInfoPrefix(), Message), ...)
 end
 
-function LogDebugError(Message)
+function LogDebugError(Message, ...)
     if DebugMode then
-        LogError(Message)
+        LogError(Message, ...)
     end
 end
 
