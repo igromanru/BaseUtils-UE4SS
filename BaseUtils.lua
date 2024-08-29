@@ -1,5 +1,6 @@
 
 local UEHelpers = require("UEHelpers")
+
 -- UEHelpers function shortcuts
 GetKismetSystemLibrary = UEHelpers.GetKismetSystemLibrary
 GetKismetMathLibrary = UEHelpers.GetKismetMathLibrary
@@ -188,7 +189,7 @@ function ForwardLineTraceByChannel(TraceChannel, LengthInM)
         local startLocation = cameraManager:GetCameraLocation()
         local endLocation = GetKismetMathLibrary():Add_VectorVector(startLocation, lookDirOffset)
         local traceColor = { R = 0, G = 0, B = 0, A = 0 }
-        local worldContext = playerController
+        local worldContext = playerController ---@type UObject
         if playerController.Pawn:IsValid() then
             -- Set Pawn as WorldContext to ignore own player with bIgnoreSelf parameter
             worldContext = playerController.Pawn
@@ -200,4 +201,23 @@ function ForwardLineTraceByChannel(TraceChannel, LengthInM)
         end
     end
     return nil
+end
+
+---Tries to find the UFunction object before executing RegisterHook. Can still resolve into an error if RegisterHook throws one<br>
+---For RegisterHook details see: https://docs.ue4ss.com/lua-api/global-functions/staticfindobject.html
+---@param UFunctionName string # Full name of a UFunction
+---@param Callback fun(self: UObject, ...) # Hook
+---@param OutHookIds? { PreId: integer, PostId: integer }
+---@return boolean Success # Returns false if the UFunction doesn't exist, true if RegisterHook was executed and error when RegisterHook throws one
+function TryRegisterHook(UFunctionName, Callback, OutHookIds)
+    if not UFunctionName or not Callback then return false end
+
+    local uFunction = StaticFindObject(UFunctionName)
+    if uFunction and uFunction:IsValid() then
+        OutHookIds = OutHookIds or {}
+        OutHookIds.PreId, OutHookIds.PostId = RegisterHook(UFunctionName, Callback)
+        return true
+    end
+
+    return false
 end
