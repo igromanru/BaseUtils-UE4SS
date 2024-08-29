@@ -14,13 +14,12 @@ function GetModInfoPrefix()
     return string.format("[%s v%s]", ModName, ModVersion)
 end
 
-local function Log(Prefix, ...)
-    if not ... or #... <= 0 then return end
-    local args = {...}
+local function Log(Prefix, Args)
+    if not Args or #Args <= 0 then return end
     Prefix = Prefix or ""
 
     local message = Prefix
-    for i, v in ipairs(args) do
+    for i, v in ipairs(Args) do
         if i > 1 then
             message = message .. " "
         end
@@ -30,7 +29,7 @@ local function Log(Prefix, ...)
 end
 
 function LogInfo(...)
-    Log(GetModInfoPrefix().." ", ...)
+    Log(GetModInfoPrefix().." ", {...})
 end
 
 function LogDebug(...)
@@ -40,7 +39,7 @@ function LogDebug(...)
 end
 
 function LogError(...)
-    Log(GetModInfoPrefix() .. "[Error] ", ...)
+    Log(GetModInfoPrefix() .. "[Error] ", {...})
 end
 
 function LogDebugError(...)
