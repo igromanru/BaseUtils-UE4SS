@@ -1,6 +1,11 @@
 
 local UEHelpers = require("UEHelpers")
-local MathUtils = require("MathUtils")
+
+local currentDir = debug.getinfo(1, "S").source:match("@(.+\\)BaseUtils.lua")
+if currentDir then
+    package.path = package.path .. ';' .. currentDir .. '?.lua'
+    require("MathUtils")
+end
 
 -- UEHelpers function shortcuts
 GetKismetSystemLibrary = UEHelpers.GetKismetSystemLibrary
