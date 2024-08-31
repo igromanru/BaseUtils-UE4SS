@@ -48,22 +48,11 @@ function LogDebugError(...)
     end
 end
 
----Returns FVector as string format "X: %f, Y: %f, Z: %f"
+---Returns FVector as string format "X, Y, Z: %f, %f, %f"
 ---@param Vector FVector
 ---@return string
 function VectorToString(Vector)
-    return string.format("X: %f, Y: %f, Z: %f", Vector.X, Vector.Y, Vector.Z)
-end
-
----Converts FVector to a lua table
----@param Vector FVector
----@return table
-function VectorToUserdata(Vector)
-    return {
-        X = Vector.X,
-        Y = Vector.Y,
-        Z = Vector.Z
-    }
+    return string.format("X, Y, Z: %f, %f, %f", Vector.X, Vector.Y, Vector.Z)
 end
 
 ---Checks if FVector is equal to 0, 0, 0
@@ -77,17 +66,7 @@ end
 ---@param Vector2D FVector2D
 ---@return string
 function Vector2DToString(Vector2D)
-    return string.format("X: %f, Y: %f", Vector2D.X, Vector2D.Y)
-end
-
----Converts FVector2D to a lua table
----@param Vector2D FVector2D
----@return table
-function Vector2DToUserdata(Vector2D)
-    return {
-        X = Vector2D.X,
-        Y = Vector2D.Y
-    }
+    return string.format("X, Y: %f, %f", Vector2D.X, Vector2D.Y)
 end
 
 ---Checks if FVector is equal to 0, 0
@@ -97,6 +76,19 @@ function IsEmptyVector2D(Vector2D)
     return not Vector2D or (Vector2D.X == 0 and Vector2D.Y == 0)
 end
 
+---Returns FRotator as string format "Pitch, Yaw, Roll: %f, %f, %f"
+---@param Rotator FRotator
+---@return string
+function RotatorToString(Rotator)
+    return string.format("Pitch, Yaw, Roll: %f, %f, %f", Rotator.Pitch, Rotator.Yaw, Rotator.Roll)
+end
+
+---Checks if FRotator is equal to 0, 0, 0
+---@param Rotator FRotator
+---@return boolean
+function IsEmptyVector(Rotator)
+    return Rotator.Pitch == 0 and Rotator.Yaw == 0 and Rotator.Roll == 0
+end
 
 ---comment Converts UE units (centimeter) to meters
 ---@param Units number
