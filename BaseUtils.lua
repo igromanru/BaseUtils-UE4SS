@@ -48,6 +48,48 @@ function LogDebugError(...)
     end
 end
 
+---@param X float?
+---@param Y float?
+---@param Z float?
+---@return FVector # As userdata
+function FVector(X, Y, Z)
+    X = X or 0.0
+    Y = Y or 0.0
+    Z = Z or 0.0
+    return {
+        X = X,
+        Y = Y,
+        Z = Z
+    }
+end
+
+---@param X float?
+---@param Y float?
+---@return FVector2D # As userdata
+function FVector(X, Y)
+    X = X or 0.0
+    Y = Y or 0.0
+    return {
+        X = X,
+        Y = Y
+    }
+end
+
+---@param Pitch float?
+---@param Yaw float?
+---@param Roll float?
+---@return FRotator # As userdata
+function FRotator(Pitch, Yaw, Roll)
+    Pitch = Pitch or 0.0
+    Yaw = Yaw or 0.0
+    Roll = Roll or 0.0
+    return {
+        Pitch = Pitch,
+        Yaw = Yaw,
+        Roll = Roll
+    }
+end
+
 ---Returns FVector as string format "X: %f, Y: %f, Z: %f"
 ---@param Vector FVector
 ---@return string
