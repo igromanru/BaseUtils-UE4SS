@@ -37,6 +37,23 @@ def remove_item(path):
         except OSError as e:
             print(f"Error removing directory {path}: {e}")
 
+def search_and_replace(file_path, search_text, replace_text):
+    # Read the file content
+    with open(file_path, 'r') as file:
+        file_content = file.read()
+    
+    # Perform the search and replace
+    updated_content = file_content.replace(search_text, replace_text)
+    
+    # Write the updated content back to the file
+    with open(file_path, 'w') as file:
+        file.write(updated_content)
+    
+    # Count the number of replacements
+    replacements = file_content.count(search_text)
+    
+    return replacements
+
 def self_delete():
     script_path = os.path.abspath(__file__)
     if sys.platform.startswith('win'):
@@ -47,7 +64,10 @@ def self_delete():
 
 if __name__ == "__main__":
     current_directory = os.getcwd()
+    print(f"Replacing DebugMode true with false")
     print(f"Starting cleanup in: {current_directory}")
+    replacements = search_and_replace(current_directory + "\Scripts\main.lua", "DebugMode = true", "DebugMode = false")
+    print(f"Replaced: {replacements} times")
     print(f"Items to be removed: {ITEMS_TO_REMOVE}")
     remove_specified_files(current_directory)
     print("Cleanup completed.")
