@@ -8,8 +8,8 @@ if currentDir then
 end
 
 -- UEHelpers function shortcuts
-GetKismetSystemLibrary = UEHelpers.GetKismetSystemLibrary
-GetKismetMathLibrary = UEHelpers.GetKismetMathLibrary
+GetKismetSystemLibrary = UEHelpers.GetKismetSystemLibrary ---@type fun(ForceInvalidateCache: boolean?): UKismetSystemLibrary
+GetKismetMathLibrary = UEHelpers.GetKismetMathLibrary ---@type fun(ForceInvalidateCache: boolean?): UKismetMathLibrary
 
 ModName = "BaseUtils"
 ModVersion = "1.0.0"
@@ -171,6 +171,32 @@ function ForwardLineTraceByChannel(TraceChannel, LengthInM)
         end
     end
     return nil
+end
+
+---Teleports an actor to a close location of another
+---@param Actor AActor # Actor that should be teleported
+---@param TargetActor AActor # Target to teleport to
+---@param Behind boolean? # If the actor should be teleported behind or infront of the target
+---@param DistanceToActor integer? # Default 100 aka. 1m
+---@return boolean
+function TeleportActorToActor(Actor, TargetActor, Behind, DistanceToActor)
+    if not Actor or not TargetActor or not Actor:IsValid() or not TargetActor:IsValid() then return false end
+    Behind = Behind or false
+    DistanceToActor = DistanceToActor or 100 -- 1m
+    
+    local direction = TargetActor:GetActorForwardVector()
+    local tagetLocation = TargetActor:K2_GetActorLocation()
+    tagetLocation.Z = tagetLocation.Z + 20
+    local targetRotation = TargetActor:K2_GetActorRotation()
+    if Behind then
+        DistanceToActor = DistanceToActor * -1
+    else
+        targetRotation.Yaw = targetRotation.Yaw * -1
+    end
+    local locationOffset = GetKismetMathLibrary():Multiply_VectorVector(direction, FVector(DistanceToActor, DistanceToActor, 0))
+    tagetLocation = GetKismetMathLibrary():Add_VectorVector(tagetLocation, locationOffset)
+
+    return Actor:K2_TeleportTo(tagetLocation, targetRotation)
 end
 
 ---Tries to find the UFunction object before executing RegisterHook. Can still resolve into an error if RegisterHook throws one<br>
