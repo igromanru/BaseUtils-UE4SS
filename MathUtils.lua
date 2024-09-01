@@ -48,6 +48,13 @@ function VectorToString(Vector)
     return string.format("X, Y, Z: %f, %f, %f", Vector.X, Vector.Y, Vector.Z)
 end
 
+---Resolves FVector as userdata
+---@param Vector FVector
+---@return FVector # FVector but as table
+function VectorToUserdata(Vector)
+    return FVector(Vector.X, Vector.Y, Vector.Z)
+end
+
 ---Compares two FVector
 ---@param Vector1 FVector
 ---@param Vector2 FVector
@@ -70,6 +77,13 @@ function Vector2DToString(Vector2D)
     return string.format("X, Y: %f, %f", Vector2D.X, Vector2D.Y)
 end
 
+---Resolves FVector2D as userdata
+---@param Vector2D FVector2D
+---@return FVector2D # FVector2D but as table
+function VectorToUserdata(Vector2D)
+    return FVector2D(Vector2D.X, Vector2D.Y)
+end
+
 ---Compares two FVector2D
 ---@param Vector2D1 FVector2D
 ---@param Vector2D2 FVector2D
@@ -90,6 +104,13 @@ end
 ---@return string
 function RotatorToString(Rotator)
     return string.format("Pitch, Yaw, Roll: %f, %f, %f", Rotator.Pitch, Rotator.Yaw, Rotator.Roll)
+end
+
+---Resolves FRotator as userdata
+---@param Rotator FRotator
+---@return FRotator # FRotator but as table
+function RotatorToUserdata(Rotator)
+    return FRotator(Rotator.Pitch, Rotator.Yaw, Rotator.Roll)
 end
 
 ---Compares two FRotator
