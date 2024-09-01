@@ -54,6 +54,20 @@ function LogDebugError(...)
     end
 end
 
+---- Default objects ---
+------------------------
+
+local GameplayStaticsCache = nil
+function GetGameplayStatics()
+    if not GameplayStaticsCache or not GameplayStaticsCache:IsValid() then
+        GameplayStaticsCache = StaticFindObject("/Script/Engine.Default__GameplayStatics")
+    end
+    return GameplayStaticsCache
+end
+
+-- Exported functions --
+------------------------
+
 local MyPlayerControllerCache = nil
 ---Returns main APlayerController
 ---@return APlayerController?
