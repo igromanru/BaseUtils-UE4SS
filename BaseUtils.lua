@@ -54,6 +54,25 @@ function LogDebugError(...)
     end
 end
 
+----- FName getter -----
+------------------------
+
+local WaitingToStartName = NAME_None
+function GetNameWaitingToStart()
+    if WaitingToStartName == NAME_None then
+        WaitingToStartName = FName("WaitingToStart", EFindName.FNAME_Find)
+    end
+    return WaitingToStartName
+end
+
+local InProgressName = NAME_None
+function GetNameInProgress()
+    if InProgressName == NAME_None then
+        InProgressName = FName("InProgress", EFindName.FNAME_Find)
+    end
+    return InProgressName
+end
+
 ---- Default objects ---
 ------------------------
 
@@ -67,6 +86,22 @@ end
 
 -- Exported functions --
 ------------------------
+
+local GameStateCache = nil
+---Returns main AGameState
+---@return AGameState?
+function GetGameState()
+    if GameStateCache and GameStateCache:IsValid() then
+        return GameStateCache
+    end
+
+    GameStateCache = FindFirstOf("GameState")
+    ---@cast GameStateCache AGameState?
+    if GameStateCache and GameStateCache:IsValid() then
+        return GameStateCache
+    end
+    return nil
+end
 
 local MyPlayerControllerCache = nil
 ---Returns main APlayerController
