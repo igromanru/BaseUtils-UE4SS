@@ -31,7 +31,7 @@ local function Log(Prefix, Args)
         end
         message = message .. tostring(v)
     end
-    print(message)
+    print(message .. "\n")
 end
 
 function LogInfo(...)
