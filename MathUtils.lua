@@ -71,7 +71,7 @@ end
 ---Resolves FVector2D as userdata
 ---@param Vector2D FVector2D
 ---@return FVector2D # FVector2D but as table
-function VectorToUserdata(Vector2D)
+function Vector2DToUserdata(Vector2D)
     return FVector2D(Vector2D.X, Vector2D.Y)
 end
 
@@ -186,6 +186,30 @@ end
 ---@return boolean
 function IsEmptyRotator(Rotator)
     return Rotator.Pitch == 0 and Rotator.Yaw == 0 and Rotator.Roll == 0
+end
+
+-- FTransform --
+----------------
+
+---@param Rotation FQuat?
+---@param Translation FVector?
+---@param Scale3D FVector?
+---@return FTransform # As userdata
+function FTransform(Rotation, Translation, Scale3D)
+    Rotation = Rotation or FQuat()
+    Translation = Translation or FVector()
+    Scale3D = Scale3D or FVector()
+    return {
+        Rotation = QuatToUserdata(Rotation),
+        Translation = VectorToUserdata(Translation),
+        Scale3D = VectorToUserdata(Scale3D)
+    }
+end
+
+---@param Transform FTransform
+---@return FTransform # As userdata
+function TransformToUserdata(Transform)
+    return FTransform(Transform.Rotation, Transform.Translation, Transform.Scale3D)
 end
 
 -- Units related functions --
