@@ -65,10 +65,10 @@ def self_delete():
 if __name__ == "__main__":
     current_directory = os.getcwd()
     print(f"Replacing DebugMode true with false")
-    print(f"Starting cleanup in: {current_directory}")
-    print(f"Replacing DebugMode true with false")
     replacements = search_and_replace(current_directory + "\Scripts\main.lua", "DebugMode = true", "DebugMode = false")
     print(f"Replaced: {replacements} times")
+    
+    print(f"Starting cleanup in: {current_directory}")
     print(f"Items to be removed: {ITEMS_TO_REMOVE}")
     remove_specified_files(current_directory)
     print("Cleanup completed.")
