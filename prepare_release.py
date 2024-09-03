@@ -4,7 +4,7 @@ import shutil
 import fnmatch
 import subprocess
 
-ITEMS_TO_REMOVE = ['.git*', '*.gitignore', '*.gitattributes', '*.gitmodules', '*.md', '*.md', '*.json', 'AFUtilsDebug.lua', 'nexusmods']
+ITEMS_TO_REMOVE = ['.git*', '*.gitignore', '*.gitattributes', '*.gitmodules', '*.md', '*.md', '*.json', 'nexusmods', 'AFUtilsDebug.lua', 'LogDebug.lua']
 
 def remove_specified_files(directory):
     for root, dirs, files in os.walk(directory, topdown=False):
@@ -66,6 +66,7 @@ if __name__ == "__main__":
     current_directory = os.getcwd()
     print(f"Replacing DebugMode true with false")
     print(f"Starting cleanup in: {current_directory}")
+    print(f"Replacing DebugMode true with false")
     replacements = search_and_replace(current_directory + "\Scripts\main.lua", "DebugMode = true", "DebugMode = false")
     print(f"Replaced: {replacements} times")
     print(f"Items to be removed: {ITEMS_TO_REMOVE}")
