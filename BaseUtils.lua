@@ -58,6 +58,10 @@ end
 ----- FName getter -----
 ------------------------
 
+function GetNameNone()
+    return NAME_None
+end
+
 local WaitingToStartName = NAME_None
 function GetNameWaitingToStart()
     if WaitingToStartName == NAME_None then
