@@ -1,4 +1,17 @@
 
+-- Math functions --
+--------------------
+
+---Compares two float values with tolerance
+---@param a float
+---@param b float
+---@param tolerance float? # Default value: 0.1
+---@return boolean Equal
+function NearlyEqual(a, b, tolerance)
+    tolerance = tolerance or 0.1
+    return math.abs(a - b) <= tolerance
+end
+
 --- FVector ---
 ---------------
 
