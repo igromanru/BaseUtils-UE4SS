@@ -10,6 +10,7 @@ end
 -- UEHelpers function shortcuts
 GetKismetSystemLibrary = UEHelpers.GetKismetSystemLibrary ---@type fun(ForceInvalidateCache: boolean?): UKismetSystemLibrary
 GetKismetMathLibrary = UEHelpers.GetKismetMathLibrary ---@type fun(ForceInvalidateCache: boolean?): UKismetMathLibrary
+GetGameplayStatics = UEHelpers.GetGameplayStatics ---@type fun(ForceInvalidateCache: boolean?): UGameplayStatics
 
 ModName = "BaseUtils"
 ModVersion = "1.0.0"
@@ -54,19 +55,92 @@ function LogDebugError(...)
     end
 end
 
+----- FName getter -----
+------------------------
+
+function GetNameNone()
+    return NAME_None
+end
+
+local WaitingToStartName = NAME_None
+function GetNameWaitingToStart()
+    if WaitingToStartName == NAME_None then
+        WaitingToStartName = FName("WaitingToStart", EFindName.FNAME_Find)
+    end
+    return WaitingToStartName
+end
+
+local InProgressName = NAME_None
+function GetNameInProgress()
+    if InProgressName == NAME_None then
+        InProgressName = FName("InProgress", EFindName.FNAME_Find)
+    end
+    return InProgressName
+end
+
 ---- Default objects ---
 ------------------------
 
-local GameplayStaticsCache = nil
-function GetGameplayStatics()
-    if not GameplayStaticsCache or not GameplayStaticsCache:IsValid() then
-        GameplayStaticsCache = StaticFindObject("/Script/Engine.Default__GameplayStatics")
-    end
-    return GameplayStaticsCache
-end
-
 -- Exported functions --
 ------------------------
+
+local EngineCache = nil
+---Returns instance of UEngine
+---@return UEngine?
+function GetEngine()
+    if EngineCache and EngineCache:IsValid() then
+        return EngineCache
+    end
+
+    EngineCache = FindFirstOf("Engine")
+    ---@cast EngineCache UEngine?
+    if EngineCache and EngineCache:IsValid() then
+        return EngineCache
+    end
+    return nil
+end
+
+local EngineCache = nil
+---Returns instance of UEngine
+---@return UEngine?
+function GetEngine()
+    if EngineCache and EngineCache:IsValid() then
+        return EngineCache
+    end
+
+    EngineCache = FindFirstOf("Engine")
+    ---@cast EngineCache UEngine?
+    if EngineCache and EngineCache:IsValid() then
+        return EngineCache
+    end
+    return nil
+end
+
+
+---Returns UGameViewportClient from UEngine
+---@return UGameViewportClient?
+function GetGameViewportClient()
+    local engine = GetEngine()
+    if not engine then return nil end
+
+    
+    if engine.GameViewport:IsValid() then
+        return engine.GameViewport
+    end
+    return nil
+end
+
+---Returns main UWorld
+---@return UWorld?
+function GetWorld()
+    local gameViewportClient = GetGameViewportClient()
+    if not gameViewportClient then return nil end
+    
+    if gameViewportClient.World:IsValid() then
+        return gameViewportClient.World
+    end
+    return nil
+end
 
 local MyPlayerControllerCache = nil
 ---Returns main APlayerController
@@ -197,6 +271,36 @@ function TeleportActorToActor(Actor, TargetActor, Behind, DistanceToActor)
     tagetLocation = GetKismetMathLibrary():Add_VectorVector(tagetLocation, locationOffset)
 
     return Actor:K2_TeleportTo(tagetLocation, targetRotation)
+end
+
+---@param ActorClassName string
+---@param Location FVector
+---@param Rotation FRotator?
+---@return AActor?
+function SpawnActorFromClass(ActorClassName, Location, Rotation)
+    if type(ActorClassName) ~= "string" or not Location then return nil end
+    Rotation = Rotation or FRotator()
+
+    local kismetMathLibrary = GetKismetMathLibrary()
+    local gameplayStatics = GetGameplayStatics()
+    if not kismetMathLibrary or not gameplayStatics then return nil end
+
+    local myPlayerController = GetMyPlayerController()
+    if not myPlayerController then return nil end
+
+    local actorClass = StaticFindObject(ActorClassName)
+    if not actorClass:IsValid() then return nil end
+
+    local transform = kismetMathLibrary:MakeTransform(Location, Rotation, FVector(1, 1, 1))
+    LogDebug("SpawnActorFromClass: myPlayerController: " .. type(myPlayerController))
+    LogDebug("SpawnActorFromClass: class: " .. actorClass:type())
+    LogDebug("SpawnActorFromClass: transform: " .. type(transform))
+    local deferredActor  = gameplayStatics:BeginDeferredActorSpawnFromClass(myPlayerController, actorClass, transform, 2, myPlayerController, 1)
+    if deferredActor and deferredActor:IsValid() then
+        LogDebug("SpawnActorFromClass: Deferred Actor successfully")
+        return gameplayStatics:FinishSpawningActor(deferredActor, transform, 1)
+    end
+    return nil
 end
 
 ---Tries to find the UFunction object before executing RegisterHook. Can still resolve into an error if RegisterHook throws one<br>
