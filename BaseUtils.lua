@@ -142,6 +142,30 @@ function GetWorld()
     return nil
 end
 
+---Returns UWorld->PersistentLevel
+---@return ULevel?
+function GetPersistentLevel()
+    local world = GetWorld()
+    if not world then return nil end
+    
+    if world.PersistentLevel:IsValid() then
+        return world.PersistentLevel
+    end
+    return nil
+end
+
+---Returns WorldSettings from PersistentLevel
+---@return AWorldSettings?
+function GetWorldSettings()
+    local persistentLevel = GetPersistentLevel()
+    if not persistentLevel then return nil end
+    
+    if persistentLevel.WorldSettings:IsValid() then
+        return persistentLevel.WorldSettings
+    end
+    return nil
+end
+
 local MyPlayerControllerCache = nil
 ---Returns main APlayerController
 ---@return APlayerController?
