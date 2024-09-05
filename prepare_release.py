@@ -3,8 +3,9 @@ import sys
 import shutil
 import fnmatch
 import subprocess
+import stat
 
-ITEMS_TO_REMOVE = ['.git*', '*.gitignore', '*.gitattributes', '*.gitmodules', '*.md', '*.md', '*.json', 'nexusmods', 'AFUtilsDebug.lua', 'LogDebug.lua']
+ITEMS_TO_REMOVE = ['.git', '.git*', '*.gitignore', '*.gitattributes', '*.gitmodules', '*.md', '*.md', '*.json', 'nexusmods', 'AFUtilsDebug.lua', 'LogDebug.lua']
 
 def remove_specified_files(directory):
     for root, dirs, files in os.walk(directory, topdown=False):
@@ -23,6 +24,11 @@ def remove_specified_files(directory):
         except OSError as e:
             print(f"Error removing empty directory {root}: {e}")
 
+def on_rmtree_error(func, path, exc_info):
+    #from: https://stackoverflow.com/questions/4829043/how-to-remove-read-only-attrib-directory-with-python-in-windows
+    os.chmod(path, stat.S_IWRITE)
+    os.unlink(path)
+
 def remove_item(path):
     if os.path.isfile(path):
         try:
@@ -32,7 +38,7 @@ def remove_item(path):
             print(f"Error removing file {path}: {e}")
     elif os.path.isdir(path):
         try:
-            shutil.rmtree(path,)
+            shutil.rmtree(path, onerror=on_rmtree_error)
             print(f"Removed directory: {path}")
         except OSError as e:
             print(f"Error removing directory {path}: {e}")
