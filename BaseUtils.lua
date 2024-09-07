@@ -100,23 +100,6 @@ function GetEngine()
     return nil
 end
 
-local EngineCache = nil
----Returns instance of UEngine
----@return UEngine?
-function GetEngine()
-    if EngineCache and EngineCache:IsValid() then
-        return EngineCache
-    end
-
-    EngineCache = FindFirstOf("Engine")
-    ---@cast EngineCache UEngine?
-    if EngineCache and EngineCache:IsValid() then
-        return EngineCache
-    end
-    return nil
-end
-
-
 ---Returns UGameViewportClient from UEngine
 ---@return UGameViewportClient?
 function GetGameViewportClient()
