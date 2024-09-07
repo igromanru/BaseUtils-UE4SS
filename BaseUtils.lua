@@ -309,17 +309,17 @@ function SpawnActorFromClass(ActorClassName, Location, Rotation)
     local gameplayStatics = GetGameplayStatics()
     if not kismetMathLibrary or not gameplayStatics then return nil end
 
-    local myPlayerController = GetMyPlayerController()
-    if not myPlayerController then return nil end
+    local world = GetWorld()
+    if not world then return nil end
 
     local actorClass = StaticFindObject(ActorClassName)
     if not actorClass:IsValid() then return nil end
 
-    local transform = kismetMathLibrary:MakeTransform(Location, Rotation, FVector(1, 1, 1))
-    LogDebug("SpawnActorFromClass: myPlayerController: " .. type(myPlayerController))
+    local transform = TransformToUserdata(kismetMathLibrary:MakeTransform(Location, Rotation, FVector(1, 1, 1)))
+    LogDebug("SpawnActorFromClass: UWorld: " .. type(world))
     LogDebug("SpawnActorFromClass: class: " .. actorClass:type())
     LogDebug("SpawnActorFromClass: transform: " .. type(transform))
-    local deferredActor  = gameplayStatics:BeginDeferredActorSpawnFromClass(myPlayerController, actorClass, transform, 2, myPlayerController, 1)
+    local deferredActor  = gameplayStatics:BeginDeferredActorSpawnFromClass(world, actorClass, transform, 0, nil, 1)
     if deferredActor and deferredActor:IsValid() then
         LogDebug("SpawnActorFromClass: Deferred Actor successfully")
         return gameplayStatics:FinishSpawningActor(deferredActor, transform, 1)
