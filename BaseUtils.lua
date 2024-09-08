@@ -125,6 +125,22 @@ function GetWorld()
     return nil
 end
 
+local GameStateCache = nil
+---Returns AGameState
+---@return AGameState?
+function GetGameState()
+    if GameStateCache and GameStateCache:IsValid() then
+        return GameStateCache
+    end
+
+    GameStateCache = FindFirstOf("GameState")
+    ---@cast GameStateCache AGameState?
+    if GameStateCache and GameStateCache:IsValid() then
+        return GameStateCache
+    end
+    return nil
+end
+
 ---Returns UWorld->PersistentLevel
 ---@return ULevel?
 function GetPersistentLevel()
