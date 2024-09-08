@@ -134,7 +134,7 @@ function GetGameState()
     end
 
     GameStateCache = FindFirstOf("GameState")
-    ---@cast GameStateCache AGameState?
+    ---@cast GameStateCache AGameState
     if GameStateCache and GameStateCache:IsValid() then
         return GameStateCache
     end
@@ -175,9 +175,10 @@ function GetMyPlayerController()
     MyPlayerControllerCache = nil
 
     local playerControllers = FindAllOf("PlayerController")
+    ---@cast playerControllers APlayerController[]?
     if playerControllers and type(playerControllers) == 'table' then 
-        for _, controller in pairs(playerControllers) do
-            if controller.Pawn:IsValid() and controller.Pawn:IsPlayerControlled() then
+        for _, controller in ipairs(playerControllers) do
+            if controller:IsPlayerController() then
                 MyPlayerControllerCache = controller
                 break
             end
