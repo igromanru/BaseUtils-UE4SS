@@ -5,6 +5,8 @@ local currentDir = debug.getinfo(1, "S").source:match("@(.+\\)BaseUtils.lua")
 if currentDir then
     package.path = package.path .. ';' .. currentDir .. '?.lua'
     require("MathUtils")
+    require("FNames")
+    require("DefaultObjects")
 end
 
 -- UEHelpers function shortcuts
@@ -54,32 +56,6 @@ function LogDebugError(...)
         LogError(...)
     end
 end
-
------ FName getter -----
-------------------------
-
-function GetNameNone()
-    return NAME_None
-end
-
-local WaitingToStartName = NAME_None
-function GetNameWaitingToStart()
-    if WaitingToStartName == NAME_None then
-        WaitingToStartName = FName("WaitingToStart", EFindName.FNAME_Find)
-    end
-    return WaitingToStartName
-end
-
-local InProgressName = NAME_None
-function GetNameInProgress()
-    if InProgressName == NAME_None then
-        InProgressName = FName("InProgress", EFindName.FNAME_Find)
-    end
-    return InProgressName
-end
-
----- Default objects ---
-------------------------
 
 -- Exported functions --
 ------------------------
