@@ -101,6 +101,22 @@ function GetWorld()
     return nil
 end
 
+local GameStateCache = nil
+---Returns AGameState
+---@return AGameState?
+function GetGameState()
+    if GameStateCache and GameStateCache:IsValid() then
+        return GameStateCache
+    end
+
+    GameStateCache = FindFirstOf("GameState")
+    ---@cast GameStateCache AGameState
+    if GameStateCache and GameStateCache:IsValid() then
+        return GameStateCache
+    end
+    return nil
+end
+
 ---Returns UWorld->PersistentLevel
 ---@return ULevel?
 function GetPersistentLevel()
@@ -135,9 +151,10 @@ function GetMyPlayerController()
     MyPlayerControllerCache = nil
 
     local playerControllers = FindAllOf("PlayerController")
+    ---@cast playerControllers APlayerController[]?
     if playerControllers and type(playerControllers) == 'table' then 
-        for _, controller in pairs(playerControllers) do
-            if controller.Pawn:IsValid() and controller.Pawn:IsPlayerControlled() then
+        for _, controller in ipairs(playerControllers) do
+            if controller:IsPlayerController() then
                 MyPlayerControllerCache = controller
                 break
             end
