@@ -47,6 +47,10 @@ function LogDebug(...)
     end
 end
 
+function LogWarn(...)
+    Log(GetModInfoPrefix() .. "[Warning] ", {...})
+end
+
 function LogError(...)
     Log(GetModInfoPrefix() .. "[Error] ", {...})
 end
@@ -141,6 +145,19 @@ function GetWorldSettings()
     return nil
 end
 
+local GameInstanceCache = nil
+---Returns instance of UGameInstance
+---@return UGameInstance?
+function GetGameInstance()
+    if GameInstanceCache and GameInstanceCache:IsValid() then return GameInstanceCache end
+
+    GameInstanceCache = FindFirstOf("GameInstance") ---@type UGameInstance
+    if not GameInstanceCache:IsValid() then
+        GameInstanceCache = nil
+    end
+    return GameInstanceCache
+end
+
 local MyPlayerControllerCache = nil
 ---Returns main APlayerController
 ---@return APlayerController?
@@ -148,17 +165,13 @@ function GetMyPlayerController()
     if MyPlayerControllerCache and MyPlayerControllerCache:IsValid() then
         return MyPlayerControllerCache
     end
-    MyPlayerControllerCache = nil
-
-    local playerControllers = FindAllOf("PlayerController")
-    ---@cast playerControllers APlayerController[]?
-    if playerControllers and type(playerControllers) == 'table' then 
-        for _, controller in ipairs(playerControllers) do
-            if controller:IsPlayerController() then
-                MyPlayerControllerCache = controller
-                break
-            end
-        end
+    
+    local gameInstance = GetGameInstance()
+    if gameInstance and #gameInstance.LocalPlayers > 0 then
+        MyPlayerControllerCache = gameInstance.LocalPlayers[1].PlayerController
+    end
+    if not MyPlayerControllerCache or not MyPlayerControllerCache:IsValid() then
+        MyPlayerControllerCache = nil
     end
     
     return MyPlayerControllerCache
