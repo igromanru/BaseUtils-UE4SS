@@ -230,6 +230,28 @@ function GetActorFromHitResult(HitResult)
     return nil
 end
 
+function LineTraceByChannel(StartLocation, EndLocation, TraceChannel)
+    if not StartLocation or not StartLocation.X or not EndLocation or not EndLocation.X then return nil end
+    TraceChannel = TraceChannel or 1 -- WorldDynamic
+
+    local playerController = GetMyPlayerController()
+    if playerController and playerController:IsValid() then
+        local traceColor = { R = 0, G = 0, B = 0, A = 0 }
+        local actorsToIgnore = {}
+        local outHitResult = {}
+        local worldContext = playerController ---@type UObject
+        if playerController.Pawn:IsValid() then
+            -- Set Pawn as WorldContext to ignore own player with bIgnoreSelf parameter
+            worldContext = playerController.Pawn
+        end
+        if GetKismetSystemLibrary():LineTraceSingle(worldContext, StartLocation, EndLocation, TraceChannel, false, actorsToIgnore, 0, outHitResult, true, traceColor, traceColor, 0.0) then
+            return GetActorFromHitResult(outHitResult)
+        end
+    end
+    return nil
+end
+
+
 ---Fires a line trace in front of the camera that collides with objects based on collision channel
 ---@param TraceChannel ECollisionChannel|number|nil (Default: 1) It's actually ETraceTypeQuery enum but ECollisionChannel members are named according to their type (0 = WorldStatic, 1 = WorldDynamic, 2 = Pawn, 3 = Visibility)
 ---@param LengthInM number|nil (Default: 20) Trace line length in meter 
