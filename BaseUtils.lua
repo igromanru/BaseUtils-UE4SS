@@ -230,6 +230,11 @@ function GetActorFromHitResult(HitResult)
     return nil
 end
 
+---Fires a line trace from start to end location
+---@param StartLocation FVector
+---@param EndLocation FVector
+---@param TraceChannel ECollisionChannel|number|nil (Default: 1) It's actually ETraceTypeQuery enum but ECollisionChannel members are named according to their type (0 = WorldStatic, 1 = WorldDynamic, 2 = Pawn, 3 = Visibility)
+---@return AActor|nil #Actor from hit result
 function LineTraceByChannel(StartLocation, EndLocation, TraceChannel)
     if not StartLocation or not StartLocation.X or not EndLocation or not EndLocation.X then return nil end
     TraceChannel = TraceChannel or 1 -- WorldDynamic
@@ -250,7 +255,6 @@ function LineTraceByChannel(StartLocation, EndLocation, TraceChannel)
     end
     return nil
 end
-
 
 ---Fires a line trace in front of the camera that collides with objects based on collision channel
 ---@param TraceChannel ECollisionChannel|number|nil (Default: 1) It's actually ETraceTypeQuery enum but ECollisionChannel members are named according to their type (0 = WorldStatic, 1 = WorldDynamic, 2 = Pawn, 3 = Visibility)
