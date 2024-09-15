@@ -59,6 +59,16 @@ function IsEmptyVector(Vector)
     return IsVectorEqual(Vector, FVector(0, 0, 0))
 end
 
+---Compares two FVector values with tolerance
+---@param a FVector
+---@param b FVector
+---@param tolerance float? # Default value: 1.0
+---@return boolean Equal
+function NearlyEqualVector(a, b, tolerance)
+    tolerance = tolerance or 1.0
+    return NearlyEqual(a.X, b.X, tolerance) and NearlyEqual(a.Y, b.Y, tolerance) and NearlyEqual(a.Z, b.Z, tolerance)
+end
+
 -- FVector2D --
 ---------------
 
