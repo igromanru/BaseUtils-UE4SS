@@ -219,8 +219,10 @@ function GetActorFromHitResult(HitResult)
     local actor = nil
     if UnrealVersion:IsBelow(5, 0) then
         actor = HitResult.Actor:Get()
-    else
+    elseif UnrealVersion:IsBelow(5, 4) then
         actor = HitResult.HitObjectHandle.Actor:Get()
+    else
+        actor = HitResult.HitObjectHandle.ReferenceObject:Get()
     end
 
     if actor and actor:IsValid() then
