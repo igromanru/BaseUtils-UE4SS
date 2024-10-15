@@ -7,6 +7,7 @@ if currentDir then
     require("MathUtils")
     require("FNames")
     require("DefaultObjects")
+    require("StaticClasses")
 end
 
 -- UEHelpers function shortcuts
@@ -83,11 +84,11 @@ end
 
 ---Returns hit actor from FHitResult, it handles the struct differance between UE4 and UE5
 ---@param HitResult FHitResult
----@return AActor|nil
+---@return AActor|UObject
 function GetActorFromHitResult(HitResult)
-    if not HitResult then return nil end
+    local actor = CreateInvalidObject()
+    if not HitResult then return actor end
 
-    local actor = nil
     if UnrealVersion:IsBelow(5, 0) then
         actor = HitResult.Actor:Get()
     elseif UnrealVersion:IsBelow(5, 4) then
@@ -96,20 +97,16 @@ function GetActorFromHitResult(HitResult)
         actor = HitResult.HitObjectHandle.ReferenceObject:Get()
     end
 
-    if actor and actor:IsValid() then
-        return actor
-    end
-
-    return nil
+    return actor
 end
 
 ---Fires a line trace from start to end location
 ---@param StartLocation FVector
 ---@param EndLocation FVector
 ---@param TraceChannel ECollisionChannel|number|nil (Default: 1) It's actually ETraceTypeQuery enum but ECollisionChannel members are named according to their type (0 = WorldStatic, 1 = WorldDynamic, 2 = Pawn, 3 = Visibility)
----@return AActor|nil #Actor from hit result
+---@return AActor|UObject #Actor from hit result
 function LineTraceByChannel(StartLocation, EndLocation, TraceChannel)
-    if not StartLocation or not StartLocation.X or not EndLocation or not EndLocation.X then return nil end
+    if not StartLocation or not StartLocation.X or not EndLocation or not EndLocation.X then return CreateInvalidObject() end
     TraceChannel = TraceChannel or 1 -- WorldDynamic
 
     local playerController = UEHelpers.GetPlayerController()
@@ -126,13 +123,13 @@ function LineTraceByChannel(StartLocation, EndLocation, TraceChannel)
             return GetActorFromHitResult(outHitResult)
         end
     end
-    return nil
+    return CreateInvalidObject()
 end
 
 ---Fires a line trace in front of the camera that collides with objects based on collision channel
 ---@param TraceChannel ECollisionChannel|number|nil (Default: 1) It's actually ETraceTypeQuery enum but ECollisionChannel members are named according to their type (0 = WorldStatic, 1 = WorldDynamic, 2 = Pawn, 3 = Visibility)
 ---@param LengthInM number|nil (Default: 20) Trace line length in meter 
----@return AActor|nil #Actor from hit result
+---@return AActor|UObject #Actor from hit result
 function ForwardLineTraceByChannel(TraceChannel, LengthInM)
     TraceChannel = TraceChannel or 1 -- WorldDynamic
     LengthInM = LengthInM or 20.0
@@ -156,8 +153,67 @@ function ForwardLineTraceByChannel(TraceChannel, LengthInM)
             return GetActorFromHitResult(outHitResult)
         end
     end
-    return nil
+    return CreateInvalidObject()
 end
+
+---Fires a line trace from start to end location
+---@param StartLocation FVector
+---@param EndLocation FVector
+---@param TraceObject ECollisionChannel|number|nil (Default: 1) It's actually EObjectTypeQuery enum but ECollisionChannel members are named according to their type (0 = WorldStatic, 1 = WorldDynamic, 2 = Pawn, 3 = Visibility)
+---@return AActor|UObject #Actor from hit result
+function LineTraceByObject(StartLocation, EndLocation, TraceObject)
+    if not StartLocation or not StartLocation.X or not EndLocation or not EndLocation.X then return CreateInvalidObject() end
+    TraceChannel = TraceChannel or 1 -- WorldDynamic
+
+    local playerController = UEHelpers.GetPlayerController()
+    if playerController and playerController:IsValid() then
+        local traceColor = { R = 0, G = 0, B = 0, A = 0 }
+        local actorsToIgnore = {}
+        local outHitResult = {}
+        local worldContext = playerController ---@type UObject
+        if playerController.Pawn:IsValid() then
+            -- Set Pawn as WorldContext to ignore own player with bIgnoreSelf parameter
+            worldContext = playerController.Pawn
+        end
+        local traceObjects = { TraceObject }
+        if GetKismetSystemLibrary():LineTraceSingleForObjects(worldContext, StartLocation, EndLocation, traceObjects, false, actorsToIgnore, 0, outHitResult, true, traceColor, traceColor, 0.0) then
+            return GetActorFromHitResult(outHitResult)
+        end
+    end
+    return CreateInvalidObject()
+end
+
+---Fires a line trace in front of the camera that collides with objects based on object type
+---@param TraceObject ECollisionChannel|number|nil (Default: 1) It's actually EObjectTypeQuery enum but ECollisionChannel members are named according to their type (0 = WorldStatic, 1 = WorldDynamic, 2 = Pawn, 3 = Visibility)
+---@param LengthInM number|nil (Default: 20) Trace line length in meter 
+---@return AActor|UObject #Actor from hit result
+function ForwardLineTraceByObject(TraceObject, LengthInM)
+    TraceChannel = TraceChannel or 1 -- WorldDynamic
+    LengthInM = LengthInM or 20.0
+
+    local playerController = UEHelpers.GetPlayerController()
+    if playerController and playerController.PlayerCameraManager:IsValid() then
+        local cameraManager = playerController.PlayerCameraManager
+        local lookDirection = cameraManager:GetActorForwardVector()
+        local lookDirOffset = GetKismetMathLibrary():Multiply_VectorFloat(lookDirection, MToUnits(LengthInM))
+        local startLocation = cameraManager:GetCameraLocation()
+        local endLocation = GetKismetMathLibrary():Add_VectorVector(startLocation, lookDirOffset)
+        local traceColor = { R = 0, G = 0, B = 0, A = 0 }
+        local worldContext = playerController ---@type UObject
+        if playerController.Pawn:IsValid() then
+            -- Set Pawn as WorldContext to ignore own player with bIgnoreSelf parameter
+            worldContext = playerController.Pawn
+        end
+        local actorsToIgnore = {}
+        local outHitResult = {}
+        local traceObjects = { TraceObject }
+        if GetKismetSystemLibrary():LineTraceSingleForObjects(worldContext, startLocation, endLocation, traceObjects, false, actorsToIgnore, 0, outHitResult, true, traceColor, traceColor, 0.0) then
+            return GetActorFromHitResult(outHitResult)
+        end
+    end
+    return CreateInvalidObject()
+end
+
 
 ---Teleports an actor to a close location of another
 ---@param Actor AActor # Actor that should be teleported
