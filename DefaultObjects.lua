@@ -1,11 +1,10 @@
 
 
----@type UInputSettings
-local InputSettingsCache = nil
+local InputSettingsCache = CreateInvalidObject()
 ---@return UInputSettings
-function GetInputSettings()
-    if not InputSettingsCache or not InputSettingsCache:IsValid() then
-        InputSettingsCache = StaticFindObject("/Script/Engine.Default__InputSettings") ---@type UInputSettings
+function GetDefaultInputSettings()
+    if not InputSettingsCache:IsValid() then
+        InputSettingsCache = StaticFindObject("/Script/Engine.Default__InputSettings") ---@cast InputSettingsCache UInputSettings
     end
     return InputSettingsCache
 end

@@ -64,135 +64,6 @@ end
 -- Exported functions --
 ------------------------
 
-local EngineCache = nil
----Returns instance of UEngine
----@return UEngine?
-function GetEngine()
-    if EngineCache and EngineCache:IsValid() then
-        return EngineCache
-    end
-
-    EngineCache = FindFirstOf("Engine")
-    ---@cast EngineCache UEngine?
-    if EngineCache and EngineCache:IsValid() then
-        return EngineCache
-    end
-    return nil
-end
-
----Returns UGameViewportClient from UEngine
----@return UGameViewportClient?
-function GetGameViewportClient()
-    local engine = GetEngine()
-    if not engine then return nil end
-
-    
-    if engine.GameViewport:IsValid() then
-        return engine.GameViewport
-    end
-    return nil
-end
-
----Returns main UWorld
----@return UWorld?
-function GetWorld()
-    local gameViewportClient = GetGameViewportClient()
-    if not gameViewportClient then return nil end
-    
-    if gameViewportClient.World:IsValid() then
-        return gameViewportClient.World
-    end
-    return nil
-end
-
-local GameStateCache = nil
----Returns AGameState
----@return AGameState?
-function GetGameState()
-    if GameStateCache and GameStateCache:IsValid() then
-        return GameStateCache
-    end
-
-    GameStateCache = FindFirstOf("GameState")
-    ---@cast GameStateCache AGameState
-    if GameStateCache and GameStateCache:IsValid() then
-        return GameStateCache
-    end
-    return nil
-end
-
----Returns UWorld->PersistentLevel
----@return ULevel?
-function GetPersistentLevel()
-    local world = GetWorld()
-    if not world then return nil end
-    
-    if world.PersistentLevel:IsValid() then
-        return world.PersistentLevel
-    end
-    return nil
-end
-
----Returns WorldSettings from PersistentLevel
----@return AWorldSettings?
-function GetWorldSettings()
-    local persistentLevel = GetPersistentLevel()
-    if not persistentLevel then return nil end
-    
-    if persistentLevel.WorldSettings:IsValid() then
-        return persistentLevel.WorldSettings
-    end
-    return nil
-end
-
-local GameInstanceCache = nil
----Returns instance of UGameInstance
----@return UGameInstance?
-function GetGameInstance()
-    if GameInstanceCache and GameInstanceCache:IsValid() then return GameInstanceCache end
-
-    GameInstanceCache = FindFirstOf("GameInstance") ---@type UGameInstance
-    if not GameInstanceCache:IsValid() then
-        GameInstanceCache = nil
-    end
-    return GameInstanceCache
-end
-
-local MyPlayerControllerCache = nil
----Returns main APlayerController
----@return APlayerController?
-function GetMyPlayerController()
-    if MyPlayerControllerCache and MyPlayerControllerCache:IsValid() then
-        return MyPlayerControllerCache
-    end
-    
-    local gameInstance = GetGameInstance()
-    if gameInstance and #gameInstance.LocalPlayers > 0 then
-        MyPlayerControllerCache = gameInstance.LocalPlayers[1].PlayerController
-    end
-    if not MyPlayerControllerCache or not MyPlayerControllerCache:IsValid() then
-        MyPlayerControllerCache = nil
-    end
-    
-    return MyPlayerControllerCache
-end
-
----Returns currently controlled pawn (usually the player chracter)
----@return APawn?
-function GetMyPlayer()
-    local playerController = GetMyPlayerController()
-    local player = nil
-
-    if playerController then
-        player = playerController.Pawn
-    end
-    if player and player:IsValid() then
-        return player
-    end
-
-    return nil
-end
-
 ---Finds specific UActorComponent in BlueprintCreatedComponents array
 ---@param Actor AActor
 ---@param Class UClass
@@ -241,7 +112,7 @@ function LineTraceByChannel(StartLocation, EndLocation, TraceChannel)
     if not StartLocation or not StartLocation.X or not EndLocation or not EndLocation.X then return nil end
     TraceChannel = TraceChannel or 1 -- WorldDynamic
 
-    local playerController = GetMyPlayerController()
+    local playerController = UEHelpers.GetPlayerController()
     if playerController and playerController:IsValid() then
         local traceColor = { R = 0, G = 0, B = 0, A = 0 }
         local actorsToIgnore = {}
@@ -266,7 +137,7 @@ function ForwardLineTraceByChannel(TraceChannel, LengthInM)
     TraceChannel = TraceChannel or 1 -- WorldDynamic
     LengthInM = LengthInM or 20.0
 
-    local playerController = GetMyPlayerController()
+    local playerController = UEHelpers.GetPlayerController()
     if playerController and playerController.PlayerCameraManager:IsValid() then
         local cameraManager = playerController.PlayerCameraManager
         local lookDirection = cameraManager:GetActorForwardVector()
@@ -326,7 +197,7 @@ function SpawnActorFromClass(ActorClassName, Location, Rotation)
     local gameplayStatics = GetGameplayStatics()
     if not kismetMathLibrary or not gameplayStatics then return nil end
 
-    local world = GetWorld()
+    local world = UEHelpers.GetWorld()
     if not world then return nil end
 
     local actorClass = StaticFindObject(ActorClassName)
