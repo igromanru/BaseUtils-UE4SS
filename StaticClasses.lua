@@ -28,3 +28,12 @@ function GetStaticClassStaticMeshComponent()
     end
     return StaticMeshComponent_Class
 end
+
+local SkeletalMeshComponent_Class = CreateInvalidObject()
+---@return UClass
+function GetStaticClassSkeletalMeshComponent()
+    if not SkeletalMeshComponent_Class:IsValid() then
+        SkeletalMeshComponent_Class = StaticFindObject("/Script/Engine.SkeletalMeshComponent") ---@cast SkeletalMeshComponent_Class UClass
+    end
+    return SkeletalMeshComponent_Class
+end
