@@ -65,7 +65,7 @@ end
 -- Exported functions --
 ------------------------
 
----Returns true if code runs on a server
+---Returns always true unless client joins a server
 ---@return boolean
 function IsServer()
     local world = UEHelpers.GetWorld()
