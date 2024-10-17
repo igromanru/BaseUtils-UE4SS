@@ -65,6 +65,16 @@ end
 -- Exported functions --
 ------------------------
 
+---Returns true if code runs on a server
+---@return boolean
+function IsServer()
+    local world = UEHelpers.GetWorld()
+    if world and world:IsValid() then
+        return GetKismetSystemLibrary():IsServer(world)
+    end
+    return false
+end
+
 ---Finds specific UActorComponent in BlueprintCreatedComponents array
 ---@param Actor AActor
 ---@param Class UClass
