@@ -75,6 +75,16 @@ function IsServer()
     return false
 end
 
+---Returns always true unless client joins a server
+---@return boolean
+function IsDedicatedServer()
+    local world = UEHelpers.GetWorld()
+    if world and world:IsValid() then
+        return GetKismetSystemLibrary():IsDedicatedServer(world)
+    end
+    return false
+end
+
 ---Finds specific UActorComponent in BlueprintCreatedComponents array
 ---@param Actor AActor
 ---@param Class UClass
