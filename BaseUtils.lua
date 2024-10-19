@@ -68,7 +68,7 @@ end
 ---Returns always true unless client joins a server
 ---@return boolean
 function IsServer()
-    local world = UEHelpers.GetWorld()
+    local world = UEHelpers.GetWorldContextObject()
     if world and world:IsValid() then
         return GetKismetSystemLibrary():IsServer(world)
     end
@@ -78,7 +78,7 @@ end
 ---Returns always true unless client joins a server
 ---@return boolean
 function IsDedicatedServer()
-    local world = UEHelpers.GetWorld()
+    local world = UEHelpers.GetWorldContextObject()
     if world and world:IsValid() then
         return GetKismetSystemLibrary():IsDedicatedServer(world)
     end
