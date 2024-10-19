@@ -2,14 +2,38 @@
 -- Math functions --
 --------------------
 
+function SecondsToMinutes(Seconds)
+    return Seconds / 60.0
+end
+
+function MinutesToSeconds(Minutes)
+    return Minutes * 60.0
+end
+
+function MinutesToHours(Minutes)
+    return Minutes / 60.0
+end
+
+function HoursToMinutes(Hours)
+    return Hours * 60.0
+end
+
+function SecondsToHours(Seconds)
+    return MinutesToHours(SecondsToMinutes(Seconds))
+end
+
+function HoursToSeconds(Hours)
+    return MinutesToSeconds(HoursToMinutes(Hours))
+end
+
 ---Compares two float values with tolerance
----@param a float
----@param b float
----@param tolerance float? # Default value: 0.1
+---@param Value1 float
+---@param Value2 float
+---@param Tolerance float? # Default value: 0.1
 ---@return boolean Equal
-function NearlyEqual(a, b, tolerance)
-    tolerance = tolerance or 0.1
-    return math.abs(a - b) <= tolerance
+function NearlyEqual(Value1, Value2, Tolerance)
+    Tolerance = Tolerance or 0.1
+    return math.abs(Value1 - Value2) <= Tolerance
 end
 
 --- FVector ---
@@ -60,13 +84,13 @@ function IsEmptyVector(Vector)
 end
 
 ---Compares two FVector values with tolerance
----@param a FVector
----@param b FVector
----@param tolerance float? # Default value: 1.0
+---@param Vector1 FVector
+---@param Vector2 FVector
+---@param Tolerance float? # Default value: 1.0
 ---@return boolean Equal
-function NearlyEqualVector(a, b, tolerance)
-    tolerance = tolerance or 1.0
-    return NearlyEqual(a.X, b.X, tolerance) and NearlyEqual(a.Y, b.Y, tolerance) and NearlyEqual(a.Z, b.Z, tolerance)
+function NearlyEqualVector(Vector1, Vector2, Tolerance)
+    Tolerance = Tolerance or 1.0
+    return NearlyEqual(Vector1.X, Vector2.X, Tolerance) and NearlyEqual(Vector1.Y, Vector2.Y, Tolerance) and NearlyEqual(Vector1.Z, Vector2.Z, Tolerance)
 end
 
 -- FVector2D --
