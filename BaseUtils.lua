@@ -66,14 +66,14 @@ end
 ------------------------
 
 ---Ultimate check if an object is not nil and valid
----@param object UObject?
+---@param object UObject
 ---@return boolean Valid
 function IsValid(object)
     return object ~= nil and object.IsValid ~= nil and object:IsValid()
 end
 
 ---Ultimate check if an object isn't valid in any way
----@param object UObject?
+---@param object UObject
 ---@return boolean NotValid
 function IsNotValid(object)
     return not IsValid(object)
@@ -83,7 +83,7 @@ end
 ---@return boolean
 function IsServer()
     local world = UEHelpers.GetWorldContextObject()
-    if world and world:IsValid() then
+    if IsValid(world) then
         return GetKismetSystemLibrary():IsServer(world)
     end
     return false
@@ -93,7 +93,7 @@ end
 ---@return boolean
 function IsDedicatedServer()
     local world = UEHelpers.GetWorldContextObject()
-    if world and world:IsValid() then
+    if IsValid(world) then
         return GetKismetSystemLibrary():IsDedicatedServer(world)
     end
     return false
@@ -104,7 +104,7 @@ end
 ---@param Class UClass
 ---@return UActorComponent?
 function GetBlueprintCreatedComponentByClass(Actor, Class)
-    if Actor and Class and Actor:IsValid() and Class:IsValid() then
+    if IsValid(Actor) and IsValid(Class) then
         for i = 1, #Actor.BlueprintCreatedComponents, 1 do
             local component = Actor.BlueprintCreatedComponents[i]
             if component:IsValid() and component:IsA(Class) then
@@ -144,12 +144,12 @@ function LineTraceByChannel(StartLocation, EndLocation, TraceChannel)
     TraceChannel = TraceChannel or 1 -- WorldDynamic
 
     local playerController = UEHelpers.GetPlayerController()
-    if playerController and playerController:IsValid() then
+    if IsValid(playerController) then
         local traceColor = { R = 0, G = 0, B = 0, A = 0 }
         local actorsToIgnore = {}
         local outHitResult = {}
         local worldContext = playerController ---@type UObject
-        if playerController.Pawn:IsValid() then
+        if IsValid(playerController.Pawn) then
             -- Set Pawn as WorldContext to ignore own player with bIgnoreSelf parameter
             worldContext = playerController.Pawn
         end
@@ -169,7 +169,7 @@ function ForwardLineTraceByChannel(TraceChannel, LengthInM)
     LengthInM = LengthInM or 20.0
 
     local playerController = UEHelpers.GetPlayerController()
-    if playerController and playerController.PlayerCameraManager:IsValid() then
+    if IsValid(playerController) and IsValid(playerController.PlayerCameraManager) then
         local cameraManager = playerController.PlayerCameraManager
         local lookDirection = cameraManager:GetActorForwardVector()
         local lookDirOffset = GetKismetMathLibrary():Multiply_VectorFloat(lookDirection, MToUnits(LengthInM))
@@ -177,7 +177,7 @@ function ForwardLineTraceByChannel(TraceChannel, LengthInM)
         local endLocation = GetKismetMathLibrary():Add_VectorVector(startLocation, lookDirOffset)
         local traceColor = { R = 0, G = 0, B = 0, A = 0 }
         local worldContext = playerController ---@type UObject
-        if playerController.Pawn:IsValid() then
+        if IsValid(playerController.Pawn) then
             -- Set Pawn as WorldContext to ignore own player with bIgnoreSelf parameter
             worldContext = playerController.Pawn
         end
@@ -200,7 +200,7 @@ function LineTraceByObject(StartLocation, EndLocation, TraceObject)
     TraceChannel = TraceChannel or 1 -- WorldDynamic
 
     local playerController = UEHelpers.GetPlayerController()
-    if playerController and playerController:IsValid() then
+    if IsValid(playerController) then
         local traceColor = { R = 0, G = 0, B = 0, A = 0 }
         local actorsToIgnore = {}
         local outHitResult = {}
@@ -226,7 +226,7 @@ function ForwardLineTraceByObject(TraceObject, LengthInM)
     LengthInM = LengthInM or 20.0
 
     local playerController = UEHelpers.GetPlayerController()
-    if playerController and playerController.PlayerCameraManager:IsValid() then
+    if IsValid(playerController) and IsValid(playerController.PlayerCameraManager) then
         local cameraManager = playerController.PlayerCameraManager
         local lookDirection = cameraManager:GetActorForwardVector()
         local lookDirOffset = GetKismetMathLibrary():Multiply_VectorFloat(lookDirection, MToUnits(LengthInM))
@@ -256,7 +256,7 @@ end
 ---@param DistanceToActor integer? # Default 100 aka. 1m
 ---@return boolean
 function TeleportActorToActor(Actor, TargetActor, Behind, DistanceToActor)
-    if not Actor or not TargetActor or not Actor:IsValid() or not TargetActor:IsValid() then return false end
+    if IsNotValid(Actor) or IsNotValid(TargetActor) then return false end
     Behind = Behind or false
     DistanceToActor = DistanceToActor or 100 -- 1m
     
@@ -278,31 +278,32 @@ end
 ---@param ActorClassName string
 ---@param Location FVector
 ---@param Rotation FRotator?
----@return AActor?
+---@return AActor
 function SpawnActorFromClass(ActorClassName, Location, Rotation)
-    if type(ActorClassName) ~= "string" or not Location then return nil end
+    local invalidActor = CreateInvalidObject() ---@cast invalidActor AActor
+    if type(ActorClassName) ~= "string" or not Location then return invalidActor end
     Rotation = Rotation or FRotator()
 
     local kismetMathLibrary = GetKismetMathLibrary()
     local gameplayStatics = GetGameplayStatics()
-    if not kismetMathLibrary or not gameplayStatics then return nil end
+    if not kismetMathLibrary or not gameplayStatics then return invalidActor end
 
     local world = UEHelpers.GetWorld()
-    if not world then return nil end
+    if IsNotValid(world) then return invalidActor end
 
     local actorClass = StaticFindObject(ActorClassName)
-    if not actorClass:IsValid() then return nil end
+    if IsNotValid(actorClass) then return invalidActor end
 
     local transform = TransformToUserdata(kismetMathLibrary:MakeTransform(Location, Rotation, FVector(1, 1, 1)))
     LogDebug("SpawnActorFromClass: UWorld: " .. type(world))
     LogDebug("SpawnActorFromClass: class: " .. actorClass:type())
     LogDebug("SpawnActorFromClass: transform: " .. type(transform))
     local deferredActor  = gameplayStatics:BeginDeferredActorSpawnFromClass(world, actorClass, transform, 0, nil, 1)
-    if deferredActor and deferredActor:IsValid() then
+    if IsValid(deferredActor) then
         LogDebug("SpawnActorFromClass: Deferred Actor successfully")
         return gameplayStatics:FinishSpawningActor(deferredActor, transform, 1)
     end
-    return nil
+    return invalidActor
 end
 
 ---Tries to find the UFunction object before executing RegisterHook. Can still resolve into an error if RegisterHook throws one<br>
@@ -315,7 +316,7 @@ function TryRegisterHook(UFunctionName, Callback, OutHookIds)
     if not UFunctionName or not Callback then return false end
 
     local uFunction = StaticFindObject(UFunctionName)
-    if uFunction and uFunction:IsValid() then
+    if IsValid(uFunction) then
         OutHookIds = OutHookIds or {}
         OutHookIds.PreId, OutHookIds.PostId = RegisterHook(UFunctionName, Callback)
         return true
