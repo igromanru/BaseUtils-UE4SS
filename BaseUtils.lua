@@ -65,6 +65,20 @@ end
 -- Exported functions --
 ------------------------
 
+---Ultimate check if an object is not nil and valid
+---@param object UObject?
+---@return boolean Valid
+function IsValid(object)
+    return object ~= nil and object.IsValid ~= nil and object:IsValid()
+end
+
+---Ultimate check if an object isn't valid in any way
+---@param object UObject?
+---@return boolean NotValid
+function IsNotValid(object)
+    return not IsValid(object)
+end
+
 ---Returns always true unless client joins a server
 ---@return boolean
 function IsServer()
