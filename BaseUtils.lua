@@ -275,37 +275,6 @@ function TeleportActorToActor(Actor, TargetActor, Behind, DistanceToActor)
     return Actor:K2_TeleportTo(tagetLocation, targetRotation)
 end
 
----@param ActorClassName string
----@param Location FVector
----@param Rotation FRotator?
----@return AActor
-function SpawnActorFromClass(ActorClassName, Location, Rotation)
-    local invalidActor = CreateInvalidObject() ---@cast invalidActor AActor
-    if type(ActorClassName) ~= "string" or not Location then return invalidActor end
-    Rotation = Rotation or FRotator()
-
-    local kismetMathLibrary = GetKismetMathLibrary()
-    local gameplayStatics = GetGameplayStatics()
-    if not kismetMathLibrary or not gameplayStatics then return invalidActor end
-
-    local world = UEHelpers.GetWorld()
-    if IsNotValid(world) then return invalidActor end
-
-    local actorClass = StaticFindObject(ActorClassName)
-    if IsNotValid(actorClass) then return invalidActor end
-
-    local transform = TransformToUserdata(kismetMathLibrary:MakeTransform(Location, Rotation, FVector(1, 1, 1)))
-    LogDebug("SpawnActorFromClass: UWorld: " .. type(world))
-    LogDebug("SpawnActorFromClass: class: " .. actorClass:type())
-    LogDebug("SpawnActorFromClass: transform: " .. type(transform))
-    local deferredActor  = gameplayStatics:BeginDeferredActorSpawnFromClass(world, actorClass, transform, 0, nil, 1)
-    if IsValid(deferredActor) then
-        LogDebug("SpawnActorFromClass: Deferred Actor successfully")
-        return gameplayStatics:FinishSpawningActor(deferredActor, transform, 1)
-    end
-    return invalidActor
-end
-
 ---Tries to find the UFunction object before executing RegisterHook. Can still resolve into an error if RegisterHook throws one<br>
 ---For RegisterHook details see: https://docs.ue4ss.com/lua-api/global-functions/staticfindobject.html
 ---@param UFunctionName string # Full name of a UFunction
