@@ -21,10 +21,14 @@ ModVersion = "1.0.0"
 DebugMode = false
 IsModEnabled = false
 
+---Returns [ModName vModVersion] string
+---@return string
 function GetModInfoPrefix()
     return string.format("[%s v%s]", ModName, ModVersion)
 end
 
+---@param Prefix string
+---@param Args any
 local function Log(Prefix, Args)
     if not Args or #Args <= 0 then return end
     Prefix = Prefix or ""
@@ -39,28 +43,56 @@ local function Log(Prefix, Args)
     print(message .. "\n")
 end
 
+---@param ... any
 function LogInfo(...)
     Log(GetModInfoPrefix().." ", {...})
 end
 
+---@param ... any
 function LogDebug(...)
     if DebugMode then
         LogInfo(...)
     end
 end
 
+---@param ... any
 function LogWarn(...)
     Log(GetModInfoPrefix() .. "[Warning] ", {...})
 end
 
+---@param ... any
 function LogError(...)
     Log(GetModInfoPrefix() .. "[Error] ", {...})
 end
 
+---@param ... any
 function LogDebugError(...)
     if DebugMode then
         LogError(...)
     end
+end
+
+---@param table table
+function TableToString(table, prefix)
+    prefix = prefix or ""
+
+    local result = ""
+    if type(table) == "table" then
+        for key, value in pairs(table) do
+            if result ~= "" then
+                result = result .. "\n"
+            end
+            result = result .. prefix .. tostring(key) .. ": "
+            if type(value) == "table" then
+                result = result .. "\n" .. TableToString(value, prefix .. " ")
+            else
+                result = result .. tostring(value)
+            end
+        end
+    else
+        result = prefix .. tostring(table)
+    end
+    return result
 end
 
 -- Exported functions --
