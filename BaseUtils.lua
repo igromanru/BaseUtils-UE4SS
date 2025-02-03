@@ -13,6 +13,7 @@ end
 -- UEHelpers function shortcuts
 GetKismetSystemLibrary = UEHelpers.GetKismetSystemLibrary ---@type fun(ForceInvalidateCache: boolean?): UKismetSystemLibrary
 GetKismetMathLibrary = UEHelpers.GetKismetMathLibrary ---@type fun(ForceInvalidateCache: boolean?): UKismetMathLibrary
+GetKismetStringLibrary = UEHelpers.GetKismetStringLibrary ---@type fun(ForceInvalidateCache: boolean?): UKismetStringLibrary
 GetGameplayStatics = UEHelpers.GetGameplayStatics ---@type fun(ForceInvalidateCache: boolean?): UGameplayStatics
 
 ModName = "BaseUtils"
