@@ -238,14 +238,14 @@ end
 -- FTransform --
 ----------------
 
----@param Rotation FQuat?
 ---@param Translation FVector?
+---@param Rotation FQuat?
 ---@param Scale3D FVector?
 ---@return FTransform # As userdata
-function FTransform(Rotation, Translation, Scale3D)
-    Rotation = Rotation or FQuat()
+function FTransform(Translation, Rotation, Scale3D)
     Translation = Translation or FVector()
-    Scale3D = Scale3D or FVector()
+    Rotation = Rotation or FQuat()
+    Scale3D = Scale3D or FVector(1.0, 1.0, 1.0)
     return {
         Rotation = QuatToUserdata(Rotation),
         Translation = VectorToUserdata(Translation),
@@ -256,7 +256,7 @@ end
 ---@param Transform FTransform
 ---@return FTransform # As userdata
 function TransformToUserdata(Transform)
-    return FTransform(Transform.Rotation, Transform.Translation, Transform.Scale3D)
+    return FTransform(Transform.Translation, Transform.Rotation, Transform.Scale3D)
 end
 
 -- Units related functions --

@@ -293,3 +293,70 @@ function TryRegisterHook(UFunctionName, Callback, OutHookIds)
 
     return false
 end
+
+---Untested function
+---@param ActorClassName string
+---@param Location FVector
+---@param Rotation FRotator?
+---@return AActor
+function SpawnActorFromClass(ActorClassName, Location, Rotation)
+    local invalidActor = CreateInvalidObject() ---@cast invalidActor AActor
+    if type(ActorClassName) ~= "string" or not Location then return invalidActor end
+    Rotation = Rotation or FRotator()
+
+    LoadAsset(ActorClassName)
+
+    local kismetMathLibrary = GetKismetMathLibrary()
+    local gameplayStatics = GetGameplayStatics()
+    if not kismetMathLibrary or not gameplayStatics then return invalidActor end
+
+    local world = UEHelpers.GetWorld()
+    if IsNotValid(world) then return invalidActor end
+
+    local actorClass = StaticFindObject(ActorClassName)
+    if IsNotValid(actorClass) then
+        LogError("SpawnActorFromClass: Couldn't find static object:", ActorClassName)
+        return invalidActor
+    end
+
+    local transform = TransformToUserdata(kismetMathLibrary:MakeTransform(Location, Rotation, FVector(1.0, 1.0, 1.0)))
+    LogDebug("SpawnActorFromClass: UWorld: " .. type(world))
+    LogDebug("SpawnActorFromClass: class: " .. actorClass:type())
+    LogDebug("SpawnActorFromClass: transform: " .. type(transform))
+    for key, value in pairs(transform) do
+        LogDebug("key:", key, "value:", value)
+        for k, v in pairs(value) do
+            LogDebug("  k:", k, "v:", v)
+        end
+    end
+    local deferredActor  = gameplayStatics:BeginDeferredActorSpawnFromClass(world, actorClass, transform, 0, nil, 0)
+    if IsValid(deferredActor) then
+        LogDebug("SpawnActorFromClass: Deferred Actor successfully")
+        return gameplayStatics:FinishSpawningActor(deferredActor, transform, 0)
+    end
+    return invalidActor
+end
+
+---Untested function
+---@param ActorClassName string
+---@param Location FVector
+---@param Rotation FRotator?
+---@return AActor
+function SpawnActorByClassName(ActorClassName, Location, Rotation)
+    local invalidActor = CreateInvalidObject() ---@cast invalidActor AActor
+    if type(ActorClassName) ~= "string" or not Location then return invalidActor end
+    Rotation = Rotation or FRotator()
+
+    LoadAsset(ActorClassName)
+
+    local world = UEHelpers.GetWorld()
+    if IsNotValid(world) then return invalidActor end
+
+    local actorClass = StaticFindObject(ActorClassName)
+    if IsNotValid(actorClass) then
+        LogError("SpawnActorFromClass: Couldn't find static object:", ActorClassName)
+        return invalidActor
+    end
+
+    return world:SpawnActor(actorClass, Location, Rotation)
+end
