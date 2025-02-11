@@ -353,15 +353,15 @@ function SpawnActorFromClass(ActorClassName, Location, Rotation)
     end
 
     local transform = TransformToUserdata(kismetMathLibrary:MakeTransform(Location, Rotation, FVector(1.0, 1.0, 1.0)))
-    LogDebug("SpawnActorFromClass: UWorld: " .. type(world))
-    LogDebug("SpawnActorFromClass: class: " .. actorClass:type())
-    LogDebug("SpawnActorFromClass: transform: " .. type(transform))
-    for key, value in pairs(transform) do
-        LogDebug("key:", key, "value:", value)
-        for k, v in pairs(value) do
-            LogDebug("  k:", k, "v:", v)
-        end
-    end
+    -- LogDebug("SpawnActorFromClass: UWorld: " .. type(world))
+    -- LogDebug("SpawnActorFromClass: class: " .. actorClass:type())
+    -- LogDebug("SpawnActorFromClass: transform: " .. type(transform))
+    -- for key, value in pairs(transform) do
+    --     LogDebug("key:", key, "value:", value)
+    --     for k, v in pairs(value) do
+    --         LogDebug("  k:", k, "v:", v)
+    --     end
+    -- end
     local deferredActor  = gameplayStatics:BeginDeferredActorSpawnFromClass(world, actorClass, transform, 0, nil, 0)
     if IsValid(deferredActor) then
         LogDebug("SpawnActorFromClass: Deferred Actor successfully")
