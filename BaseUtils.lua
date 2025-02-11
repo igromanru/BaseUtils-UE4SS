@@ -352,7 +352,7 @@ function SpawnActorFromClass(ActorClassName, Location, Rotation)
         return invalidActor
     end
 
-    local transform = TransformToUserdata(kismetMathLibrary:MakeTransform(Location, Rotation, FVector(1.0, 1.0, 1.0)))
+    local transform = kismetMathLibrary:MakeTransform(Location, Rotation, FVector(1.0, 1.0, 1.0))
     -- LogDebug("SpawnActorFromClass: UWorld: " .. type(world))
     -- LogDebug("SpawnActorFromClass: class: " .. actorClass:type())
     -- LogDebug("SpawnActorFromClass: transform: " .. type(transform))

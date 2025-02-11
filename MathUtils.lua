@@ -42,7 +42,7 @@ end
 ---@param X float?
 ---@param Y float?
 ---@param Z float?
----@return FVector # As userdata
+---@return FVector # As table
 function FVector(X, Y, Z)
     X = X or 0.0
     Y = Y or 0.0
@@ -61,10 +61,10 @@ function VectorToString(Vector)
     return string.format("X, Y, Z: %f, %f, %f", Vector.X, Vector.Y, Vector.Z)
 end
 
----Resolves FVector as userdata
+---Resolves FVector as table
 ---@param Vector FVector
 ---@return FVector # FVector but as table
-function VectorToUserdata(Vector)
+function VectorToTable(Vector)
     return FVector(Vector.X, Vector.Y, Vector.Z)
 end
 
@@ -98,7 +98,7 @@ end
 
 ---@param X float?
 ---@param Y float?
----@return FVector2D # As userdata
+---@return FVector2D # As table
 function FVector2D(X, Y)
     X = X or 0.0
     Y = Y or 0.0
@@ -115,10 +115,10 @@ function Vector2DToString(Vector2D)
     return string.format("X, Y: %f, %f", Vector2D.X, Vector2D.Y)
 end
 
----Resolves FVector2D as userdata
+---Resolves FVector2D as table
 ---@param Vector2D FVector2D
 ---@return FVector2D # FVector2D but as table
-function Vector2DToUserdata(Vector2D)
+function Vector2DToTable(Vector2D)
     return FVector2D(Vector2D.X, Vector2D.Y)
 end
 
@@ -144,7 +144,7 @@ end
 ---@param Y float?
 ---@param Z float?
 ---@param W float?
----@return FQuat # As userdata
+---@return FQuat # As table
 function FQuat(X, Y, Z, W)
     X = X or 0.0
     Y = Y or 0.0
@@ -166,10 +166,10 @@ function QuatToString(Quat)
     return string.format("X, Y, Z, W: %f, %f, %f, %f", Quat.X, Quat.Y, Quat.Z, Quat.W)
 end
 
----Resolves FQuat as userdata
+---Resolves FQuat as table
 ---@param Quat FQuat
 ---@return FQuat # FQuat but as table
-function QuatToUserdata(Quat)
+function QuatToTable(Quat)
     return FQuat(Quat.X, Quat.Y, Quat.Z, Quat.W)
 end
 
@@ -194,7 +194,7 @@ end
 ---@param Pitch float?
 ---@param Yaw float?
 ---@param Roll float?
----@return FRotator # As userdata
+---@return FRotator # As table
 function FRotator(Pitch, Yaw, Roll)
     Pitch = Pitch or 0.0
     Yaw = Yaw or 0.0
@@ -213,10 +213,10 @@ function RotatorToString(Rotator)
     return string.format("Pitch, Yaw, Roll: %f, %f, %f", Rotator.Pitch, Rotator.Yaw, Rotator.Roll)
 end
 
----Resolves FRotator as userdata
+---Resolves FRotator as table
 ---@param Rotator FRotator
 ---@return FRotator # FRotator but as table
-function RotatorToUserdata(Rotator)
+function RotatorToTable(Rotator)
     return FRotator(Rotator.Pitch, Rotator.Yaw, Rotator.Roll)
 end
 
@@ -241,21 +241,21 @@ end
 ---@param Translation FVector?
 ---@param Rotation FQuat?
 ---@param Scale3D FVector?
----@return FTransform # As userdata
+---@return FTransform # As table
 function FTransform(Translation, Rotation, Scale3D)
     Translation = Translation or FVector()
     Rotation = Rotation or FQuat()
     Scale3D = Scale3D or FVector(1.0, 1.0, 1.0)
     return {
-        Rotation = QuatToUserdata(Rotation),
-        Translation = VectorToUserdata(Translation),
-        Scale3D = VectorToUserdata(Scale3D)
+        Rotation = QuatToTable(Rotation),
+        Translation = VectorToTable(Translation),
+        Scale3D = VectorToTable(Scale3D)
     }
 end
 
 ---@param Transform FTransform
----@return FTransform # As userdata
-function TransformToUserdata(Transform)
+---@return FTransform # As table
+function TransformToTable(Transform)
     return FTransform(Transform.Translation, Transform.Rotation, Transform.Scale3D)
 end
 

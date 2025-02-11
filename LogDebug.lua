@@ -11,7 +11,7 @@ function LogMovementComponent(MovementComponent, Prefix)
     if not MovementComponent or not MovementComponent:IsValid() then return end
     Prefix = Prefix or ""
 
-    local velocity = VectorToUserdata(MovementComponent.Velocity)
+    local velocity = VectorToTable(MovementComponent.Velocity)
     LogDebug(Prefix .. "Current Speed: ", GetKismetMathLibrary():VSize(velocity))
     LogDebug(Prefix .. "Velocity: " .. VectorToString(velocity))
     LogDebug(Prefix .. "GetMaxSpeed: ", MovementComponent:GetMaxSpeed())
