@@ -149,6 +149,33 @@ function GetBlueprintCreatedComponentByClass(Actor, Class)
     return nil
 end
 
+local myPlayerControllerCache = CreateInvalidObject() ---@cast myPlayerControllerCache APlayerController
+---@return APlayerController
+function GetMyPlayerController()
+    if IsValid(myPlayerControllerCache) then
+        return myPlayerControllerCache
+    end
+
+    local gameInstance = UEHelpers.GetGameInstance()
+    if IsValid(gameInstance) and gameInstance.LocalPlayers and #gameInstance.LocalPlayers > 0 then
+        local localPlayer = gameInstance.LocalPlayers[1]
+        if IsValid(localPlayer) then
+            myPlayerControllerCache = localPlayer.PlayerController
+        end
+    end
+    return myPlayerControllerCache
+end
+
+---Returns Pawn from first player controller
+---@return ACharacter|APawn|UObject
+function GetMyPlayer()
+    local playerController = GetMyPlayerController()
+    if IsValid(playerController) then
+        return playerController.Pawn
+    end
+    return CreateInvalidObject()
+end
+
 ---Returns hit actor from FHitResult, it handles the struct differance between UE4 and UE5
 ---@param HitResult FHitResult
 ---@return AActor|UObject
