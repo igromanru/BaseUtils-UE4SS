@@ -132,6 +132,13 @@ function IsDedicatedServer()
     return false
 end
 
+---Returns true if local player is the host / has authority
+---@return boolean
+function IsHost()
+    local myPlayerController = GetMyPlayerController()
+    return IsValid(myPlayerController) and myPlayerController:HasAuthority()
+end
+
 ---Finds specific UActorComponent in BlueprintCreatedComponents array
 ---@param Actor AActor
 ---@param Class UClass
