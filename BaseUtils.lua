@@ -115,7 +115,7 @@ end
 ---Returns always true unless client joins a server
 ---@return boolean
 function IsServer()
-    local world = UEHelpers.GetWorldContextObject()
+    local world = GetWorld()
     if IsValid(world) then
         return GetKismetSystemLibrary():IsServer(world)
     end
@@ -125,7 +125,7 @@ end
 ---Returns always true unless client joins a server
 ---@return boolean
 function IsDedicatedServer()
-    local world = UEHelpers.GetWorldContextObject()
+    local world = GetWorld()
     if IsValid(world) then
         return GetKismetSystemLibrary():IsDedicatedServer(world)
     end
@@ -147,6 +147,24 @@ function GetBlueprintCreatedComponentByClass(Actor, Class)
     end
 
     return nil
+end
+
+local WorldCache = CreateInvalidObject() ---@cast WorldCache UWorld
+---Returns the main UWorld
+---@return UWorld
+function GetWorld()
+    if IsValid(WorldCache) then return WorldCache end
+
+    local gameInstance = UEHelpers.GetGameInstance()
+    if gameInstance:IsValid() then
+        WorldCache = gameInstance:GetWorld()
+    else
+        local playerController = UEHelpers.GetPlayerController()
+        if playerController:IsValid() then
+            WorldCache = playerController:GetWorld()
+        end
+    end
+    return WorldCache
 end
 
 local myPlayerControllerCache = CreateInvalidObject() ---@cast myPlayerControllerCache APlayerController
