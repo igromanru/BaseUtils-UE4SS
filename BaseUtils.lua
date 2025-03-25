@@ -135,8 +135,8 @@ end
 ---Returns true if local player is the host / has authority
 ---@return boolean
 function IsHost()
-    local myPlayerController = GetMyPlayerController()
-    return IsValid(myPlayerController) and myPlayerController:HasAuthority()
+    local word = GetWorld()
+    return IsValid(word) and IsValid(word.AuthorityGameMode)
 end
 
 ---Finds specific UActorComponent in BlueprintCreatedComponents array
