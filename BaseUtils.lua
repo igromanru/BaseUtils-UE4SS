@@ -187,14 +187,29 @@ function GetMyPlayerController()
         if IsValid(localPlayer) then
             myPlayerControllerCache = localPlayer.PlayerController
         end
+    else
+        local playerController = UEHelpers.GetPlayerController()
+        if IsValid(playerController) then
+            myPlayerControllerCache = playerController
+        end
     end
     return myPlayerControllerCache
 end
 
----Returns Pawn from first player controller
+---Returns Pawn from player controller of the first local player
 ---@return ACharacter|APawn|UObject
 function GetMyPlayer()
     local playerController = GetMyPlayerController()
+    if IsValid(playerController) then
+        return playerController.Pawn
+    end
+    return CreateInvalidObject()
+end
+
+---Returns Pawn from first player controller
+---@return ACharacter|APawn|UObject
+function GetFirstPlayer()
+    local playerController = UEHelpers.GetPlayerController()
     if IsValid(playerController) then
         return playerController.Pawn
     end
