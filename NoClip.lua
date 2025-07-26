@@ -9,8 +9,12 @@ local UEHelpers = require("UEHelpers")
 
 local NoClip = {}
 local CollisionWasDisabled = false
-local OriginalCollisionResponse = {} ---@type ECollisionChannel|nil[]
-for i = 1, 32 do OriginalCollisionResponse[i] = nil end
+local OriginalCollisionResponse = {} ---@type ECollisionChannel[]|nil[]
+
+local CollisionsCount = 32
+for i = 1, CollisionsCount do
+    table.insert(OriginalCollisionResponse, nil)
+end
 
 local myPlayerControllerCache = CreateInvalidObject() ---@cast myPlayerControllerCache APlayerController
 ---@return APlayerController
@@ -64,14 +68,14 @@ end
 
 ---@param CapsuleComponent UCapsuleComponent
 local function BackUpCollisionResponses(CapsuleComponent)
-    for i = 1, #OriginalCollisionResponse, 1 do
+    for i = 1, CollisionsCount, 1 do
         OriginalCollisionResponse[i] = CapsuleComponent:GetCollisionResponseToChannel(i - 1)
     end
 end
 
 ---@param CapsuleComponent UCapsuleComponent
 local function RestoreCollisionResponses(CapsuleComponent)
-    for i = 1, #OriginalCollisionResponse, 1 do
+    for i = 1, CollisionsCount, 1 do
         local response = OriginalCollisionResponse[i]
         if response then
             CapsuleComponent:SetCollisionResponseToChannel(i - 1, response)
@@ -84,7 +88,7 @@ end
 ---@param NewResponse ECollisionResponse|integer|nil # Default 0 (ECR_Ignore)
 local function SetCollisionResponses(CapsuleComponent, NewResponse)
     NewResponse = NewResponse or 0
-    for i = 1, #OriginalCollisionResponse, 1 do
+    for i = 1, CollisionsCount, 1 do
         CapsuleComponent:SetCollisionResponseToChannel(i - 1, NewResponse)
     end
 end
