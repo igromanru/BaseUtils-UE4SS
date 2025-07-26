@@ -70,12 +70,15 @@ end
 local function BackUpCollisionResponses(CapsuleComponent)
     for i = 1, CollisionsCount, 1 do
         OriginalCollisionResponse[i] = CapsuleComponent:GetCollisionResponseToChannel(i - 1)
+        -- print(string.format("BackUpCollisionResponses Channel: %d, Value: %d", i, OriginalCollisionResponse[i]))
     end
 end
 
 ---@param CapsuleComponent UCapsuleComponent
-local function RestoreCollisionResponses(CapsuleComponent)
-    for i = 1, CollisionsCount, 1 do
+---@param ChannelsCount integer? # Default 32
+local function RestoreCollisionResponses(CapsuleComponent, ChannelsCount)
+    ChannelsCount = ChannelsCount or CollisionsCount
+    for i = 1, ChannelsCount, 1 do
         local response = OriginalCollisionResponse[i]
         if response then
             CapsuleComponent:SetCollisionResponseToChannel(i - 1, response)
@@ -86,9 +89,11 @@ end
 
 ---@param CapsuleComponent UCapsuleComponent
 ---@param NewResponse ECollisionResponse|integer|nil # Default 0 (ECR_Ignore)
-local function SetCollisionResponses(CapsuleComponent, NewResponse)
+---@param ChannelsCount integer? # Default 32
+local function SetCollisionResponses(CapsuleComponent, NewResponse, ChannelsCount)
     NewResponse = NewResponse or 0
-    for i = 1, CollisionsCount, 1 do
+    ChannelsCount = ChannelsCount or CollisionsCount
+    for i = 1, ChannelsCount, 1 do
         CapsuleComponent:SetCollisionResponseToChannel(i - 1, NewResponse)
     end
 end
@@ -106,8 +111,8 @@ NoClip.Enable = function (WithCollision)
     myCharacterMovement:SetMovementMode(5, 0)
 
     if not WithCollision then
-        BackUpCollisionResponses(myCapsuleComponent)
-        SetCollisionResponses(myCapsuleComponent, 0)
+        -- BackUpCollisionResponses(myCapsuleComponent)
+        SetCollisionResponses(myCapsuleComponent, 0, 3)
         CollisionWasDisabled = true
     end
 
@@ -120,13 +125,14 @@ NoClip.Disable = function ()
     local myCharacterMovement = GetMyCharacterMovement()
     if not myCapsuleComponent:IsValid() or not myCharacterMovement:IsValid() then return false end
 
+    SetCollisionResponses(myCapsuleComponent, 2, 3)
+    -- if CollisionWasDisabled then
+    --     RestoreCollisionResponses(myCapsuleComponent, 2)
+    --     CollisionWasDisabled = false
+    -- end
+
     myCharacterMovement.bCheatFlying = false;
     myCharacterMovement:SetMovementMode(1, 0)
-
-    if CollisionWasDisabled then
-        RestoreCollisionResponses(myCapsuleComponent)
-        CollisionWasDisabled = false
-    end
 
     return true
 end
