@@ -163,7 +163,7 @@ function GetWorld()
     if IsValid(WorldCache) then return WorldCache end
 
     local gameInstance = UEHelpers.GetGameInstance()
-    if gameInstance:IsValid() then
+    if IsValid(gameInstance) then
         WorldCache = gameInstance:GetWorld()
     else
         local playerController = UEHelpers.GetPlayerController()
@@ -172,6 +172,28 @@ function GetWorld()
         end
     end
     return WorldCache
+end
+
+---Returns UWorld->AuthorityGameMode<br>
+---The function doesn't guarantee it to be an AGameMode, as many games derive their own game modes directly from AGameModeBase!
+---@return AGameModeBase
+function GetGameModeBase()
+    local World = GetWorld()
+    if IsValid(World) and World.AuthorityGameMode then
+        return World.AuthorityGameMode
+    end
+    return CreateInvalidObject() ---@type AGameModeBase
+end
+
+---Returns UWorld->GameState<br>
+---The function doesn't guarantee it to be an AGameState, as many games derive their own game states directly from AGameStateBase!
+---@return AGameStateBase
+function GetGameStateBase()
+    local World = GetWorld()
+    if IsValid(World) and World.GameState then
+        return World.GameState
+    end
+    return CreateInvalidObject() ---@type AGameStateBase
 end
 
 local myPlayerControllerCache = CreateInvalidObject() ---@cast myPlayerControllerCache APlayerController
