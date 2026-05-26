@@ -238,6 +238,16 @@ function GetFirstPlayer()
     return CreateInvalidObject()
 end
 
+---Returns PlayerState from "my" player controller
+---@return APlayerState|UObject
+function GetMyPlayerState()
+    local playerController = GetMyPlayerController()
+    if IsValid(playerController) then
+        return playerController.PlayerState
+    end
+    return CreateInvalidObject()
+end
+
 ---Returns hit actor from FHitResult, it handles the struct differance between UE4 and UE5
 ---@param HitResult FHitResult
 ---@return AActor|UObject
