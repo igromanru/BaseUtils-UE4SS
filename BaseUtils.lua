@@ -112,6 +112,14 @@ function IsNotValid(object)
     return not IsValid(object)
 end
 
+---Compares two objects by their address
+---@param object1 UObject
+---@param object2 UObject
+---@return boolean Valid
+function IsSameObject(object1, object2)
+    return IsValid(object1) and IsValid(object2) and object1:GetAddress() == object2:GetAddress()
+end
+
 ---Returns always true unless client joins a server
 ---@return boolean
 function IsServer()
