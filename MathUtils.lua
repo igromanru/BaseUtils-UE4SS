@@ -1,4 +1,7 @@
 
+local UEHelpers = require("UEHelpers")
+local GetKismetMathLibrary = UEHelpers.GetKismetMathLibrary ---@type fun(ForceInvalidateCache: boolean?): UKismetMathLibrary
+
 -- Math functions --
 --------------------
 
@@ -101,6 +104,25 @@ function GetVectorSize(Vector)
     return math.sqrt((Vector.X * Vector.X) + (Vector.Y * Vector.Y) + (Vector.Z * Vector.Z))
 end
 
+---Calculate the distance between two FVector
+---@param Vector1 FVector
+---@param Vector2 FVector
+---@return number Distance Returns distance in units
+function GetVectorDistance(Vector1, Vector2)
+    return GetKismetMathLibrary():Vector_Distance(VectorToTable(Vector1), VectorToTable(Vector2))
+end
+
+---Calculate the distance between a FVector and an actor
+---@param Vector1 FVector
+---@param Actor AActor
+---@return number Distance Returns distance in units or -1 if the Actor parameter is invalid
+function GetVectorToActorDistance(Vector1, Actor)
+    if Actor == nil or not Actor:IsValid() then return -1 end
+
+    local actorLocation = Actor:K2_GetActorLocation()
+    return GetVectorDistance(Vector1, actorLocation)
+end
+
 -- FVector2D --
 ---------------
 
@@ -130,6 +152,13 @@ function Vector2DToTable(Vector2D)
     return FVector2D(Vector2D.X, Vector2D.Y)
 end
 
+---Resolves FVector as 2D table
+---@param Vector FVector
+---@return FVector2D # FVector2D but as table
+function VectorTo2DTable(Vector)
+    return FVector2D(Vector.X, Vector.Y)
+end
+
 ---Compares two FVector2D
 ---@param Vector2D1 FVector2D
 ---@param Vector2D2 FVector2D
@@ -151,6 +180,14 @@ end
 function GetVector2DSize(Vector2D)
     -- Multiplication is slightly faster in Lua than exponents
     return math.sqrt((Vector2D.X * Vector2D.X) + (Vector2D.Y * Vector2D.Y))
+end
+
+---Calculate the distance between two FVector2D
+---@param Vector1 FVector2D
+---@param Vector2 FVector2D
+---@return number Distance Returns distance in units
+function GetVector2DDistance(Vector1, Vector2)
+    return GetKismetMathLibrary():Distance2D(Vector2DToTable(Vector1), Vector2DToTable(Vector2))
 end
 
 ---- FQuat ----

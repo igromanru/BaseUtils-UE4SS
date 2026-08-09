@@ -147,6 +147,16 @@ function IsHost()
     return IsValid(word) and IsValid(word.AuthorityGameMode)
 end
 
+---Check if an AActor has Authority
+---@param Actor AActor
+---@return boolean
+function IsActorHasAuthority(Actor)
+    if IsValid(Actor) then
+        return Actor:HasAuthority()
+    end
+    return false
+end
+
 ---Finds specific UActorComponent in BlueprintCreatedComponents array
 ---@param Actor AActor
 ---@param Class UClass

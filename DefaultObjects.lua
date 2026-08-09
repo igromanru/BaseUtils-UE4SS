@@ -1,5 +1,4 @@
 
-
 local InputSettingsCache = CreateInvalidObject()
 ---@return UInputSettings
 function GetDefaultInputSettings()
