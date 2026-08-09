@@ -93,6 +93,14 @@ function NearlyEqualVector(Vector1, Vector2, Tolerance)
     return NearlyEqual(Vector1.X, Vector2.X, Tolerance) and NearlyEqual(Vector1.Y, Vector2.Y, Tolerance) and NearlyEqual(Vector1.Z, Vector2.Z, Tolerance)
 end
 
+---Calculates the magnitude of a FVector
+---@param Vector FVector
+---@return number Size
+function GetVectorSize(Vector)
+    -- Multiplication is slightly faster in Lua than exponents
+    return math.sqrt((Vector.X * Vector.X) + (Vector.Y * Vector.Y) + (Vector.Z * Vector.Z))
+end
+
 -- FVector2D --
 ---------------
 
@@ -130,11 +138,19 @@ function IsVector2DEqual(Vector2D1, Vector2D2)
     return Vector2D1 and Vector2D2 and Vector2D1.X == Vector2D2.X and Vector2D1.Y == Vector2D2.Y
 end
 
----Checks if FVector is equal to 0, 0
+---Checks if FVector2D is equal to 0, 0
 ---@param Vector2D FVector2D
 ---@return boolean
 function IsEmptyVector2D(Vector2D)
     return IsVector2DEqual(Vector2D, FVector2D(0, 0))
+end
+
+---Calculates the magnitude of a FVector2D
+---@param Vector2D FVector2D
+---@return number Size
+function GetVector2DSize(Vector2D)
+    -- Multiplication is slightly faster in Lua than exponents
+    return math.sqrt((Vector2D.X * Vector2D.X) + (Vector2D.Y * Vector2D.Y))
 end
 
 ---- FQuat ----
