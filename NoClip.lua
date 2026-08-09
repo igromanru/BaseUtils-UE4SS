@@ -1,4 +1,3 @@
-
 --[[
   Author: Igromanru © 2025
   Created: 2025-07-26
@@ -100,7 +99,7 @@ end
 
 ---@param WithCollision boolean? # Default false
 ---@return boolean
-NoClip.Enable = function (WithCollision)
+NoClip.Enable = function(WithCollision)
     WithCollision = WithCollision or false
 
     local myCapsuleComponent = GetMyCapsuleComponent()
@@ -120,7 +119,7 @@ NoClip.Enable = function (WithCollision)
 end
 
 ---@return boolean
-NoClip.Disable = function ()
+NoClip.Disable = function()
     local myCapsuleComponent = GetMyCapsuleComponent()
     local myCharacterMovement = GetMyCharacterMovement()
     if not myCapsuleComponent:IsValid() or not myCharacterMovement:IsValid() then return false end

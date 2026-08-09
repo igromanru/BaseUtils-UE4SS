@@ -1,9 +1,10 @@
-
 local UEHelpers = require("UEHelpers")
 
-local currentDir = debug.getinfo(1, "S").source:match("@(.+\\)BaseUtils.lua")
+local source = debug.getinfo(1, "S").source
+local currentDir = source:match("@(.+[\\/])")
 if currentDir then
-    package.path = package.path .. ';' .. currentDir .. '?.lua'
+    package.path = package.path .. ";" .. currentDir .. "?.lua"
+    require("LuaUtils")
     require("MathUtils")
     require("FNames")
     require("DefaultObjects")
@@ -45,7 +46,7 @@ end
 
 ---@param ... any
 function LogInfo(...)
-    Log(GetModInfoPrefix().." ", {...})
+    Log(GetModInfoPrefix() .. " ", { ... })
 end
 
 ---@param ... any
@@ -57,12 +58,12 @@ end
 
 ---@param ... any
 function LogWarn(...)
-    Log(GetModInfoPrefix() .. "[Warning] ", {...})
+    Log(GetModInfoPrefix() .. "[Warning] ", { ... })
 end
 
 ---@param ... any
 function LogError(...)
-    Log(GetModInfoPrefix() .. "[Error] ", {...})
+    Log(GetModInfoPrefix() .. "[Error] ", { ... })
 end
 
 ---@param ... any
@@ -93,6 +94,23 @@ function TableToString(table, prefix)
         result = prefix .. tostring(table)
     end
     return result
+end
+
+---Extracts the class path from paths that contains functions or properties
+---@param Path string
+---@return string ClassPath
+function ExtractClassPath(Path)
+    local startIdx = string.find(Path, "/")
+    local endIdx = string.find(Path, ":")
+    
+    if startIdx and endIdx then
+        return string.sub(Path, startIdx, endIdx - 1)
+    
+    elseif startIdx then
+        return string.sub(Path, startIdx)
+    end
+    
+    return Path
 end
 
 -- Exported functions --
@@ -312,7 +330,7 @@ end
 
 ---Fires a line trace in front of the camera that collides with objects based on collision channel
 ---@param TraceChannel ECollisionChannel|number|nil (Default: 1) It's actually ETraceTypeQuery enum but ECollisionChannel members are named according to their type (0 = WorldStatic, 1 = WorldDynamic, 2 = Pawn, 3 = Visibility)
----@param LengthInM number|nil (Default: 20) Trace line length in meter 
+---@param LengthInM number|nil (Default: 20) Trace line length in meter
 ---@return AActor|UObject #Actor from hit result
 function ForwardLineTraceByChannel(TraceChannel, LengthInM)
     TraceChannel = TraceChannel or 1 -- WorldDynamic
@@ -369,7 +387,7 @@ end
 
 ---Fires a line trace in front of the camera that collides with objects based on object type
 ---@param TraceObject ECollisionChannel|number|nil (Default: 1) It's actually EObjectTypeQuery enum but ECollisionChannel members are named according to their type (0 = WorldStatic, 1 = WorldDynamic, 2 = Pawn, 3 = Visibility)
----@param LengthInM number|nil (Default: 20) Trace line length in meter 
+---@param LengthInM number|nil (Default: 20) Trace line length in meter
 ---@return AActor|UObject #Actor from hit result
 function ForwardLineTraceByObject(TraceObject, LengthInM)
     TraceChannel = TraceChannel or 1 -- WorldDynamic
@@ -398,7 +416,6 @@ function ForwardLineTraceByObject(TraceObject, LengthInM)
     return CreateInvalidObject()
 end
 
-
 ---Teleports an actor to a close location of another
 ---@param Actor AActor # Actor that should be teleported
 ---@param TargetActor AActor # Target to teleport to
@@ -409,7 +426,7 @@ function TeleportActorToActor(Actor, TargetActor, Behind, DistanceToActor)
     if IsNotValid(Actor) or IsNotValid(TargetActor) then return false end
     Behind = Behind or false
     DistanceToActor = DistanceToActor or 100 -- 1m
-    
+
     local direction = TargetActor:GetActorForwardVector()
     local tagetLocation = TargetActor:K2_GetActorLocation()
     tagetLocation.Z = tagetLocation.Z + 20
@@ -419,7 +436,8 @@ function TeleportActorToActor(Actor, TargetActor, Behind, DistanceToActor)
     else
         targetRotation.Yaw = targetRotation.Yaw * -1
     end
-    local locationOffset = GetKismetMathLibrary():Multiply_VectorVector(direction, FVector(DistanceToActor, DistanceToActor, 0))
+    local locationOffset = GetKismetMathLibrary():Multiply_VectorVector(direction,
+        FVector(DistanceToActor, DistanceToActor, 0))
     tagetLocation = GetKismetMathLibrary():Add_VectorVector(tagetLocation, locationOffset)
 
     return Actor:K2_TeleportTo(tagetLocation, targetRotation)
@@ -469,7 +487,7 @@ function SpawnActorFromClass(ActorClassName, Location, Rotation)
         return invalidActor
     end
 
-    local transform = kismetMathLibrary:MakeTransform(Location, Rotation, FVector(1.0, 1.0, 1.0))
+    local transform     = kismetMathLibrary:MakeTransform(Location, Rotation, FVector(1.0, 1.0, 1.0))
     -- LogDebug("SpawnActorFromClass: UWorld: " .. type(world))
     -- LogDebug("SpawnActorFromClass: class: " .. actorClass:type())
     -- LogDebug("SpawnActorFromClass: transform: " .. type(transform))
@@ -479,7 +497,7 @@ function SpawnActorFromClass(ActorClassName, Location, Rotation)
     --         LogDebug("  k:", k, "v:", v)
     --     end
     -- end
-    local deferredActor  = gameplayStatics:BeginDeferredActorSpawnFromClass(world, actorClass, transform, 0, nil, 0)
+    local deferredActor = gameplayStatics:BeginDeferredActorSpawnFromClass(world, actorClass, transform, 0, nil, 0)
     if IsValid(deferredActor) then
         LogDebug("SpawnActorFromClass: Deferred Actor successfully")
         return gameplayStatics:FinishSpawningActor(deferredActor, transform, 0)
