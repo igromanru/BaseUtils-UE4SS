@@ -96,7 +96,7 @@ function TableToString(table, prefix)
     return result
 end
 
----Extracts the class path from paths that contains functions or properties
+---Extracts the class path from a path that contains function or property
 ---@param Path string
 ---@return string ClassPath
 function ExtractClassPath(Path)

@@ -18,6 +18,7 @@ end
 ---@field preCallback? fun(self: UObject, ...)
 ---@field postCallback? fun(self: UObject, ...)
 ---@field IsActive fun(self: HookInfo): boolean Returns whether this hook is currently active.
+---@field Reset fun(self: HookInfo)
 local HookInfo = {
     functionName = "",
     preId = -1,
@@ -38,12 +39,12 @@ end
 
 ---Creates a new hook info object with default values
 ---@param functionName? string Default: ""
----@param preId? number Default: -1
----@param postId? number Default: -1
 ---@param preCallback? fun(self: UObject, ...) Default: nil
 ---@param postCallback? fun(self: UObject, ...) Default: nil
+---@param preId? number Default: -1
+---@param postId? number Default: -1
 ---@return HookInfo
-local function CreateHookInfo(functionName, preId, postId, preCallback, postCallback)
+local function CreateHookInfo(functionName, preCallback, postCallback, preId, postId)
     functionName = functionName or ""
     preId = preId or -1
     postId = postId or -1
@@ -57,13 +58,20 @@ local function CreateHookInfo(functionName, preId, postId, preCallback, postCall
 
         IsActive = function (self)
             return IsStringNotEmpty(self.functionName) and IsValidId(self.preId)
+        end,
+        Reset = function (self)
+            self.functionName = ""
+            self.preId = -1
+            self.postId = -1
+            self.preCallback = nil
+            self.postCallback = nil
         end
     }
 end
 
 ---@class HooksManager
----@field hooks { [string]: HookInfo }
----@field hooksQueue { [string]: HookInfo } Delays hooks that will be registered on ClientRestart
+---@field hooks { [string]: HookInfo? }
+---@field hooksQueue { [string]: HookInfo? } Delays hooks that will be registered on ClientRestart
 local HooksManager = {
     hooks = {}, -- Key is the function name/path
     hooksQueue = {}
@@ -76,6 +84,52 @@ function HooksManager:GetHookInfo(functionName)
     if not IsActiveHook(hookInfo) then return nil end
 
     return self.hooks[functionName]
+end
+
+---@param functionName string
+---@param hookInfo HookInfo
+---@return HookInfo
+local function SetHookInfo(functionName, hookInfo)
+    HooksManager.hooks[functionName] = hookInfo
+    return hookInfo
+end
+
+---Register a hook and update HookInfo with pre and post IDs
+---@param refHookInfo? HookInfo Keep in mind, that's a reference to the a table in self.hooks table
+---@return HookInfo?
+local function UnsafeHook(refHookInfo)
+    if not refHookInfo then return nil end
+
+    local success, preIdOrErr, postId = pcall(RegisterHook, refHookInfo.functionName, refHookInfo.preCallback, refHookInfo.postCallback)
+
+    if success then
+        refHookInfo.preId = preIdOrErr
+        refHookInfo.postId = postId
+    else
+        refHookInfo:Reset()
+        LogError("HooksManager: Failed to register hook.\nFunction:", refHookInfo.functionName, "\nError:", preIdOrErr)
+    end
+
+    return refHookInfo
+end
+
+---Unregister a hook and reset the HookInfo
+---@param refHookInfo? HookInfo Keep in mind, that's a reference to the a table in self.hooks table
+---@return boolean
+local function UnsafeUnhook(refHookInfo)
+    if not refHookInfo then return false end
+
+    local success, error = pcall(UnregisterHook, refHookInfo.functionName, refHookInfo.preId, refHookInfo.postId)
+    
+    if success then
+        refHookInfo:Reset()
+        return true
+    else
+        LogError("HooksManager: Failed to unregister hook.\nFunction:", refHookInfo.functionName, "\nError:", error)
+        refHookInfo:Reset()
+    end
+
+    return false
 end
 
 ---Hook function and register in the hook manager
@@ -94,22 +148,12 @@ function HooksManager:Hook(functionName, preCallback, postCallback)
         return nil
     end
 
-    local hookInfo = self.hooks[functionName]
+    local hookInfo = self:GetHookInfo(functionName)
     
-    if not hookInfo or hookInfo.preId < 0 then
-        -- local success, error = pcall(LoadAsset, ExtractClassPath(functionName))
-
-        local success, preIdOrErr, postId = pcall(RegisterHook, functionName, preCallback, postCallback)
-        if success then
-            hookInfo.functionName = functionName
-            hookInfo.preId = preIdOrErr
-            hookInfo.postId = postId
-            hookInfo.preCallback = preCallback
-            hookInfo.postCallback = postCallback
-            self.hooks[functionName] = hookInfo
-        else
-            LogError("HooksManager:Hook: Failed to register hook.\nError:", preIdOrErr)
-        end
+    if not IsActiveHook(hookInfo) then
+        hookInfo = CreateHookInfo(functionName, preCallback, postCallback)
+        UnsafeHook(hookInfo)
+        SetHookInfo(functionName, hookInfo)
     else
         LogWarn("HooksManager:Hook: A hook for the function already exists. It's better to use a single hook for the same function per mod!\nFunction:", functionName)
     end
@@ -117,16 +161,38 @@ function HooksManager:Hook(functionName, preCallback, postCallback)
     return hookInfo
 end
 
+---Return HookInfo reference, which will become Valid after the hook is complete
 ---@param delay integer Delay in milliseconds
 ---@param functionName string
 ---@param preCallback fun(self: UObject, ...)|nil
 ---@param postCallback fun(self: UObject, ...)|nil
+---@return HookInfo? Reference
 function HooksManager:HookWithDelay(delay, functionName, preCallback, postCallback)
+    if type(functionName) ~= "string" or functionName == "" then
+        LogError("HooksManager:HookWithDelay: Parameter `functionName` has to be a valid string that contains full function path!")
+        return nil
+    end
 
+    if type(preCallback) ~= "function" and type(postCallback) ~= "function" then
+        LogError("HooksManager:HookWithDelay: Either `preCallback` or `postCallback` has to be set!")
+        return nil
+    end
+
+    local hookInfo = self:GetHookInfo(functionName)
+    
+    if IsActiveHook(hookInfo) then
+        LogWarn("HooksManager:HookWithDelay: A hook for the function already exists. It's better to use a single hook for the same function per mod!\nFunction:", functionName)
+        return hookInfo
+    end
+
+    hookInfo = CreateHookInfo(functionName, preCallback, postCallback)
+    SetHookInfo(functionName, hookInfo)
 
     ExecuteWithDelay(delay, function()
-        HooksManager:Hook(functionName, preCallback, postCallback)
+        UnsafeHook(hookInfo)
     end)
+
+    return hookInfo
 end
 
 ---@param functionName string
@@ -144,22 +210,14 @@ function HooksManager:UnhookByFunctionName(functionName)
         return false
     end
 
-    local hookInfo = self.hooks[functionName]
+    local hookInfo = self:GetHookInfo(functionName)
 
-    if not hookInfo then
+    if not IsActiveHook(hookInfo) then
         LogWarn("HooksManager:UnhookByFunctionName: There is no hook for the function:", functionName)
         return false
     end
 
-    local success, error = pcall(UnregisterHook, functionName, hookInfo.preId, hookInfo.postId)
-    if not success then
-        LogError("HooksManager:UnhookByFunctionName: Failed to unregister hook.\nError:", error)
-        return false
-    end
-
-    self.hooks[functionName] = nil
-
-    return true
+    return UnsafeUnhook(hookInfo)
 end
 
 ---@param hookInfo HookInfo
