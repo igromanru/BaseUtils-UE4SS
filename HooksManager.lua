@@ -220,7 +220,7 @@ function HooksManager:UnhookByFunctionName(functionName)
     return UnsafeUnhook(hookInfo)
 end
 
----@param hookInfo HookInfo
+---@param hookInfo? HookInfo
 ---@return boolean Success
 function HooksManager:Unhook(hookInfo)
     if not hookInfo or type(hookInfo.functionName) ~= "string" then
