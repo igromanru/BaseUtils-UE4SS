@@ -1,15 +1,25 @@
 local UEHelpers = require("UEHelpers")
 
-local source = debug.getinfo(1, "S").source
-local currentDir = source:match("@(.+[\\/])")
+function GetCurrentDir()
+    local source = debug.getinfo(1, "S").source
+    return source:match("@(.+[\\/])")
+end
+
+local currentDir = GetCurrentDir()
+-- ToDo rework BaseUtils to not load all the files into global space
 if currentDir then
     package.path = package.path .. ";" .. currentDir .. "?.lua"
-    require("LuaUtils")
-    require("MathUtils")
-    require("LinearColors")
-    require("FNames")
-    require("DefaultObjects")
-    require("StaticClasses")
+end
+require("LuaUtils")
+require("MathUtils")
+require("LinearColors")
+require("FNames")
+require("DefaultObjects")
+require("StaticClasses")
+
+function RequireLocal(CurrentDir, FileName)
+    local chunk = assert(loadfile(CurrentDir .. FileName .. ".lua"))
+    return chunk()
 end
 
 -- UEHelpers function shortcuts
@@ -74,25 +84,25 @@ function LogDebugError(...)
     end
 end
 
----@param table table
-function TableToString(table, prefix)
-    prefix = prefix or ""
+---@param Table table
+function TableToString(Table, Prefix)
+    Prefix = Prefix or ""
 
     local result = ""
-    if type(table) == "table" then
-        for key, value in pairs(table) do
+    if type(Table) == "table" then
+        for key, value in pairs(Table) do
             if result ~= "" then
                 result = result .. "\n"
             end
-            result = result .. prefix .. tostring(key) .. ": "
+            result = result .. Prefix .. tostring(key) .. ": "
             if type(value) == "table" then
-                result = result .. "\n" .. TableToString(value, prefix .. " ")
+                result = result .. "\n" .. TableToString(value, Prefix .. " ")
             else
                 result = result .. tostring(value)
             end
         end
     else
-        result = prefix .. tostring(table)
+        result = Prefix .. tostring(Table)
     end
     return result
 end
@@ -182,8 +192,9 @@ end
 ---@return UActorComponent?
 function GetBlueprintCreatedComponentByClass(Actor, Class)
     if IsValid(Actor) and IsValid(Class) then
-        for i = 1, #Actor.BlueprintCreatedComponents, 1 do
-            local component = Actor.BlueprintCreatedComponents[i]
+        local components = Actor.BlueprintCreatedComponents
+        for i = 1, #components, 1 do
+            local component = components[i]
             if component:IsValid() and component:IsA(Class) then
                 return component
             end
@@ -366,7 +377,7 @@ end
 ---@return AActor|UObject #Actor from hit result
 function LineTraceByObject(StartLocation, EndLocation, TraceObject)
     if not StartLocation or not StartLocation.X or not EndLocation or not EndLocation.X then return CreateInvalidObject() end
-    TraceChannel = TraceChannel or 1 -- WorldDynamic
+    TraceObject = TraceObject or 1 -- WorldDynamic
 
     local playerController = UEHelpers.GetPlayerController()
     if IsValid(playerController) then
@@ -374,7 +385,7 @@ function LineTraceByObject(StartLocation, EndLocation, TraceObject)
         local actorsToIgnore = {}
         local outHitResult = {}
         local worldContext = playerController ---@type UObject
-        if playerController.Pawn:IsValid() then
+        if IsValid(playerController.Pawn) then
             -- Set Pawn as WorldContext to ignore own player with bIgnoreSelf parameter
             worldContext = playerController.Pawn
         end
@@ -391,7 +402,7 @@ end
 ---@param LengthInM number|nil (Default: 20) Trace line length in meter
 ---@return AActor|UObject #Actor from hit result
 function ForwardLineTraceByObject(TraceObject, LengthInM)
-    TraceChannel = TraceChannel or 1 -- WorldDynamic
+    TraceObject = TraceObject or 1 -- WorldDynamic
     LengthInM = LengthInM or 20.0
 
     local playerController = UEHelpers.GetPlayerController()
@@ -429,8 +440,8 @@ function TeleportActorToActor(Actor, TargetActor, Behind, DistanceToActor)
     DistanceToActor = DistanceToActor or 100 -- 1m
 
     local direction = TargetActor:GetActorForwardVector()
-    local tagetLocation = TargetActor:K2_GetActorLocation()
-    tagetLocation.Z = tagetLocation.Z + 20
+    local targetLocation = TargetActor:K2_GetActorLocation()
+    targetLocation.Z = targetLocation.Z + 20
     local targetRotation = TargetActor:K2_GetActorRotation()
     if Behind then
         DistanceToActor = DistanceToActor * -1
@@ -439,9 +450,9 @@ function TeleportActorToActor(Actor, TargetActor, Behind, DistanceToActor)
     end
     local locationOffset = GetKismetMathLibrary():Multiply_VectorVector(direction,
         FVector(DistanceToActor, DistanceToActor, 0))
-    tagetLocation = GetKismetMathLibrary():Add_VectorVector(tagetLocation, locationOffset)
+    targetLocation = GetKismetMathLibrary():Add_VectorVector(targetLocation, locationOffset)
 
-    return Actor:K2_TeleportTo(tagetLocation, targetRotation)
+    return Actor:K2_TeleportTo(targetLocation, targetRotation)
 end
 
 ---Tries to find the UFunction object before executing RegisterHook. Can still resolve into an error if RegisterHook throws one<br>

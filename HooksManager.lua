@@ -4,15 +4,7 @@
     Description: Class to automatically handle function hooks
 ]]
 
-local Queue
-
-local source = debug.getinfo(1, "S").source
-local currentDir = source:match("@(.+[\\/])")
-if currentDir then
-    package.path = package.path .. ";" .. currentDir .. "?.lua"
-    require("BaseUtils")
-    Queue = require("Queue")
-end
+local Queue = require("Queue")
 
 ---@class HookInfo
 ---@field functionName string
@@ -69,12 +61,6 @@ local HooksManager = {
 }
 HooksManager.__index = HooksManager
 
----@param hookInfo? HookInfo
----@return boolean
-local function IsActiveHook(hookInfo)
-    return hookInfo ~= nil and hookInfo:IsActive()
-end
-
 ---Adds a HookInfo reference to the queue
 ---@param hookInfo? HookInfo
 local function PushToQueue(hookInfo)
@@ -98,11 +84,17 @@ local function IsHookInfoInQueue(hookInfo)
     return false
 end
 
+---@param hookInfo? HookInfo
+---@return boolean
+function HooksManager:IsHookActive(hookInfo)
+    return hookInfo ~= nil and hookInfo:IsActive()
+end
+
 ---@param functionName string
 ---@return HookInfo|nil
 function HooksManager:GetHookInfo(functionName)
     local hookInfo = self.hooks[functionName]
-    if not IsActiveHook(hookInfo) then return nil end
+    if not self:IsHookActive(hookInfo) then return nil end
 
     return self.hooks[functionName]
 end
@@ -224,7 +216,7 @@ function HooksManager:Hook(functionName, preCallback, postCallback)
 
     local hookInfo = self:GetHookInfo(functionName)
 
-    if not IsActiveHook(hookInfo) then
+    if not self:IsHookActive(hookInfo) then
         hookInfo = HookInfo.new(functionName, preCallback, postCallback)
         UnsafeHook(hookInfo)
         SetHookInfo(functionName, hookInfo)
@@ -254,7 +246,7 @@ function HooksManager:HookWithDelayAsync(delay, functionName, preCallback, postC
 
     local hookInfo = self:GetHookInfo(functionName)
 
-    if IsActiveHook(hookInfo) then
+    if self:IsHookActive(hookInfo) then
         LogWarn("HooksManager:HookWithDelay: A hook for the function already exists. It's better to use a single hook for the same function per mod!\nFunction:", functionName)
         return hookInfo
     end
@@ -291,7 +283,7 @@ function HooksManager:HookOnClientRestartAsync(functionName, preCallback, postCa
 
     local hookInfo = self:GetHookInfo(functionName)
 
-    if IsActiveHook(hookInfo) then
+    if self:IsHookActive(hookInfo) then
         LogWarn("HooksManager:HookOnClientRestart: A hook for the function already exists. It's better to use a single hook for the same function per mod!\nFunction:", functionName)
         return hookInfo
     end
@@ -329,7 +321,7 @@ function HooksManager:HookAutoLoadAssetAsync(functionName, preCallback, postCall
 
     local hookInfo = self:GetHookInfo(functionName)
 
-    if IsActiveHook(hookInfo) then
+    if self:IsHookActive(hookInfo) then
         LogWarn("HooksManager:HookAutoLoadAssetAsync: A hook for the function already exists. It's better to use a single hook for the same function per mod!\nFunction:", functionName)
         return hookInfo
     end
@@ -357,7 +349,7 @@ function HooksManager:UnhookByFunctionName(functionName)
 
     local hookInfo = self:GetHookInfo(functionName)
 
-    if not IsActiveHook(hookInfo) then
+    if not self:IsHookActive(hookInfo) then
         LogWarn("HooksManager:UnhookByFunctionName: There is no active hook for the function:", functionName)
         return false
     end
@@ -368,7 +360,7 @@ end
 ---@param hookInfo? HookInfo
 ---@return boolean Success
 function HooksManager:Unhook(hookInfo)
-    if not IsActiveHook(hookInfo) then
+    if not self:IsHookActive(hookInfo) then
         LogError("HooksManager:Unhook: Parameter `hookInfo` has to be a valid and active HookInfo object!")
         return false
     end
