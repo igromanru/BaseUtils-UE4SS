@@ -81,6 +81,21 @@ local function PushToQueue(hookInfo)
     HooksManager.hooksQueue:Push(hookInfo)
 end
 
+---Returns true if the HookInfo is already in the queue
+---@param hookInfo? HookInfo
+---@return boolean
+local function IsHookInfoInQueue(hookInfo)
+    if hookInfo and HooksManager.hooksQueue and HooksManager.hooksQueue.items then
+        for index, value in ipairs(HooksManager.hooksQueue.items) do
+            if hookInfo == value then
+                return true
+            end
+        end
+    end
+
+    return false
+end
+
 ---@param functionName string
 ---@return HookInfo|nil
 function HooksManager:GetHookInfo(functionName)
@@ -185,9 +200,7 @@ function HooksManager:Hook(functionName, preCallback, postCallback)
         UnsafeHook(hookInfo)
         SetHookInfo(functionName, hookInfo)
     else
-        LogWarn(
-        "HooksManager:Hook: A hook for the function already exists. It's better to use a single hook for the same function per mod!\nFunction:",
-            functionName)
+        LogWarn("HooksManager:Hook: A hook for the function already exists. It's better to use a single hook for the same function per mod!\nFunction:",functionName)
     end
 
     return hookInfo
@@ -201,8 +214,7 @@ end
 ---@return HookInfo? Reference
 function HooksManager:HookWithDelay(delay, functionName, preCallback, postCallback)
     if type(functionName) ~= "string" or functionName == "" then
-        LogError(
-        "HooksManager:HookWithDelay: Parameter `functionName` has to be a valid string that contains full function path!")
+        LogError("HooksManager:HookWithDelay: Parameter `functionName` has to be a valid string that contains full function path!")
         return nil
     end
 
@@ -214,9 +226,7 @@ function HooksManager:HookWithDelay(delay, functionName, preCallback, postCallba
     local hookInfo = self:GetHookInfo(functionName)
 
     if IsActiveHook(hookInfo) then
-        LogWarn(
-        "HooksManager:HookWithDelay: A hook for the function already exists. It's better to use a single hook for the same function per mod!\nFunction:",
-            functionName)
+        LogWarn("HooksManager:HookWithDelay: A hook for the function already exists. It's better to use a single hook for the same function per mod!\nFunction:", functionName)
         return hookInfo
     end
 
@@ -233,8 +243,43 @@ end
 ---@param functionName string
 ---@param preCallback fun(self: UObject, ...)|nil
 ---@param postCallback fun(self: UObject, ...)|nil
-function HooksManager:HookOnClientRestart(functionName, preCallback, postCallback)
+function HooksManager:HookOnClientRestart(functionName, preCallback, postCallback, loadAsset)
+    if type(functionName) ~= "string" or functionName == "" then
+        LogError("HooksManager:HookOnClientRestart: Parameter `functionName` has to be a valid string that contains full function path!")
+        return nil
+    end
 
+    if type(preCallback) ~= "function" and type(postCallback) ~= "function" then
+        LogError("HooksManager:HookOnClientRestart: Either `preCallback` or `postCallback` has to be set!")
+        return nil
+    end
+
+    local hookInfo = self:GetHookInfo(functionName)
+
+    if IsActiveHook(hookInfo) then
+        LogWarn("HooksManager:HookOnClientRestart: A hook for the function already exists. It's better to use a single hook for the same function per mod!\nFunction:", functionName)
+        return hookInfo
+    end
+
+    if IsHookInfoInQueue(hookInfo) then
+        LogWarn("HooksManager:HookOnClientRestart: The hook for the function is already in the queue!\nFunction:", functionName)
+        return hookInfo
+    end
+
+    hookInfo = HookInfo.new(functionName, preCallback, postCallback)
+    hookInfo.loadAsset = loadAsset or false
+
+    SetHookInfo(functionName, hookInfo)
+    PushToQueue(hookInfo)
+
+    return hookInfo
+end
+
+---@param functionName string
+---@param preCallback fun(self: UObject, ...)|nil
+---@param postCallback fun(self: UObject, ...)|nil
+function HooksManager:HookAndLoadAsset(functionName, preCallback, postCallback)
+    
 end
 
 ---@param functionName string
