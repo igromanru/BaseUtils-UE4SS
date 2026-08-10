@@ -316,21 +316,21 @@ end
 ---@param preCallback fun(self: UObject, ...)|nil
 ---@param postCallback fun(self: UObject, ...)|nil
 ---@return HookInfo? Reference
-function HooksManager:HookAndLoadAssetAsync(functionName, preCallback, postCallback)
+function HooksManager:HookAutoLoadAssetAsync(functionName, preCallback, postCallback)
     if type(functionName) ~= "string" or functionName == "" then
-        LogError("HooksManager:HookAndLoadAssetAsync: Parameter `functionName` has to be a valid string that contains full function path!")
+        LogError("HooksManager:HookAutoLoadAssetAsync: Parameter `functionName` has to be a valid string that contains full function path!")
         return nil
     end
 
     if type(preCallback) ~= "function" and type(postCallback) ~= "function" then
-        LogError("HooksManager:HookAndLoadAssetAsync: Either `preCallback` or `postCallback` has to be set!")
+        LogError("HooksManager:HookAutoLoadAssetAsync: Either `preCallback` or `postCallback` has to be set!")
         return nil
     end
 
     local hookInfo = self:GetHookInfo(functionName)
 
     if IsActiveHook(hookInfo) then
-        LogWarn("HooksManager:HookAndLoadAssetAsync: A hook for the function already exists. It's better to use a single hook for the same function per mod!\nFunction:", functionName)
+        LogWarn("HooksManager:HookAutoLoadAssetAsync: A hook for the function already exists. It's better to use a single hook for the same function per mod!\nFunction:", functionName)
         return hookInfo
     end
 
