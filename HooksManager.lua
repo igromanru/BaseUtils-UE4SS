@@ -351,15 +351,14 @@ end
 ---@return boolean Success
 function HooksManager:UnhookByFunctionName(functionName)
     if type(functionName) ~= "string" or functionName == "" then
-        LogError(
-            "HooksManager:UnhookByFunctionName: Parameter `functionName` has to be a valid string that contains full function path!")
+        LogError("HooksManager:UnhookByFunctionName: Parameter `functionName` has to be a valid string that contains full function path!")
         return false
     end
 
     local hookInfo = self:GetHookInfo(functionName)
 
     if not IsActiveHook(hookInfo) then
-        LogWarn("HooksManager:UnhookByFunctionName: There is no hook for the function:", functionName)
+        LogWarn("HooksManager:UnhookByFunctionName: There is no active hook for the function:", functionName)
         return false
     end
 
@@ -369,9 +368,8 @@ end
 ---@param hookInfo? HookInfo
 ---@return boolean Success
 function HooksManager:Unhook(hookInfo)
-    if not hookInfo or type(hookInfo.functionName) ~= "string" then
-        LogError(
-            "HooksManager:Unhook: Parameter `hookInfo` has to be a valid object of type `HookInfo` and contain the key `functionName`!")
+    if not IsActiveHook(hookInfo) then
+        LogError("HooksManager:Unhook: Parameter `hookInfo` has to be a valid and active HookInfo object!")
         return false
     end
 
