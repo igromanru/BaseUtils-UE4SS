@@ -528,3 +528,10 @@ function SpawnActorByClassName(ActorClassName, Location, Rotation)
 
     return world:SpawnActor(actorClass, Location, Rotation)
 end
+
+---Interrupts further code execution until an instance of the UWorld object exists
+function WaitForTheGameToBeFullyLoaded()
+    while IsNotValid(GetWorld()) do
+        LogDebug("Waiting for the world instance to ensure the game is fully loaded")
+    end
+end
