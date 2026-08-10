@@ -4,11 +4,14 @@
     Description: Class to automatically handle function hooks
 ]]
 
+local Queue
+
 local source = debug.getinfo(1, "S").source
 local currentDir = source:match("@(.+[\\/])")
 if currentDir then
     package.path = package.path .. ";" .. currentDir .. "?.lua"
     require("BaseUtils")
+    Queue = require("Queue")
 end
 
 ---@class HookInfo
@@ -17,25 +20,11 @@ end
 ---@field postId number
 ---@field preCallback? fun(self: UObject, ...)
 ---@field postCallback? fun(self: UObject, ...)
+---@field loadAsset boolean
 ---@field IsActive fun(self: HookInfo): boolean Returns whether this hook is currently active.
 ---@field Reset fun(self: HookInfo)
-local HookInfo = {
-    functionName = "",
-    preId = -1,
-    postId = -1,
-    preCallback = nil, -- When hooking a `/Script/`-function it gets executed before the function call, otherwise always after
-    postCallback = nil, -- Works only when hooking a `/Script/`-function
-
-    IsActive = function (self)
-        return false
-    end
-}
-
----@param hookInfo? HookInfo
----@return boolean
-local function IsActiveHook(hookInfo)
-    return hookInfo ~= nil and hookInfo:IsActive()
-end
+local HookInfo = {}
+HookInfo.__index = HookInfo
 
 ---Creates a new hook info object with default values
 ---@param functionName? string Default: ""
@@ -44,38 +33,53 @@ end
 ---@param preId? number Default: -1
 ---@param postId? number Default: -1
 ---@return HookInfo
-local function CreateHookInfo(functionName, preCallback, postCallback, preId, postId)
-    functionName = functionName or ""
-    preId = preId or -1
-    postId = postId or -1
-
-    return {
-        functionName = functionName,
-        preId = preId,
-        postId = postId,
+function HookInfo.new(functionName, preCallback, postCallback, preId, postId, loadAsset)
+    return setmetatable({
+        functionName = functionName or "",
+        preId = preId or -1,
+        postId = postId or -1,
         preCallback = preCallback,
         postCallback = postCallback,
+        loadAsset = loadAsset or false
+    }, HookInfo)
+end
 
-        IsActive = function (self)
-            return IsStringNotEmpty(self.functionName) and IsValidId(self.preId)
-        end,
-        Reset = function (self)
-            self.functionName = ""
-            self.preId = -1
-            self.postId = -1
-            self.preCallback = nil
-            self.postCallback = nil
-        end
-    }
+---Returns whether this hook is currently active.
+---@return boolean
+function HookInfo:IsActive()
+    return IsStringNotEmpty(self.functionName) and IsValidId(self.preId)
+end
+
+---Resets this hook info to its default values.
+function HookInfo:Reset()
+    self.functionName = ""
+    self.preId = -1
+    self.postId = -1
+    self.preCallback = nil
+    self.postCallback = nil
 end
 
 ---@class HooksManager
----@field hooks { [string]: HookInfo? }
----@field hooksQueue { [string]: HookInfo? } Delays hooks that will be registered on ClientRestart
+---@field private hooks { [string]: HookInfo? }
+---@field private hooksQueue Queue<HookInfo> Queue of references to HookInfo entries in `hooks` table
 local HooksManager = {
     hooks = {}, -- Key is the function name/path
-    hooksQueue = {}
+    hooksQueue = Queue.new()
 }
+
+---@param hookInfo? HookInfo
+---@return boolean
+local function IsActiveHook(hookInfo)
+    return hookInfo ~= nil and hookInfo:IsActive()
+end
+
+---Adds a HookInfo reference to the queue
+---@param hookInfo? HookInfo
+local function PushToQueue(hookInfo)
+    if not hookInfo then return end
+
+    HooksManager.hooksQueue:Push(hookInfo)
+end
 
 ---@param functionName string
 ---@return HookInfo|nil
@@ -100,7 +104,8 @@ end
 local function UnsafeHook(refHookInfo)
     if not refHookInfo then return nil end
 
-    local success, preIdOrErr, postId = pcall(RegisterHook, refHookInfo.functionName, refHookInfo.preCallback, refHookInfo.postCallback)
+    local success, preIdOrErr, postId = pcall(RegisterHook, refHookInfo.functionName, refHookInfo.preCallback,
+        refHookInfo.postCallback)
 
     if success then
         refHookInfo.preId = preIdOrErr
@@ -120,7 +125,7 @@ local function UnsafeUnhook(refHookInfo)
     if not refHookInfo then return false end
 
     local success, error = pcall(UnregisterHook, refHookInfo.functionName, refHookInfo.preId, refHookInfo.postId)
-    
+
     if success then
         refHookInfo:Reset()
         return true
@@ -132,6 +137,30 @@ local function UnsafeUnhook(refHookInfo)
     return false
 end
 
+local function OnClientReset(Context, NewPawn)
+    if HooksManager.hooksQueue then
+        while not HooksManager.hooksQueue:IsEmpty() do
+            local hookInfo = HooksManager.hooksQueue:Pop()
+
+
+        end
+    end
+end
+
+local clientResetPreId, clientResetPostId = nil, nil
+local function HookClientReset()
+    if not IsValidId(clientResetPreId) then
+        local success, preIdOrErr, postId = pcall(RegisterHook, "/Script/Engine.PlayerController:ClientRestart",
+            OnClientReset)
+        if success then
+            clientResetPreId = preIdOrErr
+            clientResetPostId = postId
+        else
+            LogError("HooksManager:HookClientReset: Failed to register ClientRestart hook.\nError:", preIdOrErr)
+        end
+    end
+end
+
 ---Hook function and register in the hook manager
 ---@param functionName string
 ---@param preCallback fun(self: UObject, ...)|nil
@@ -139,7 +168,8 @@ end
 ---@return HookInfo|nil
 function HooksManager:Hook(functionName, preCallback, postCallback)
     if type(functionName) ~= "string" or functionName == "" then
-        LogError("HooksManager:Hook: Parameter `functionName` has to be a valid string that contains full function path!")
+        LogError(
+        "HooksManager:Hook: Parameter `functionName` has to be a valid string that contains full function path!")
         return nil
     end
 
@@ -149,19 +179,21 @@ function HooksManager:Hook(functionName, preCallback, postCallback)
     end
 
     local hookInfo = self:GetHookInfo(functionName)
-    
+
     if not IsActiveHook(hookInfo) then
-        hookInfo = CreateHookInfo(functionName, preCallback, postCallback)
+        hookInfo = HookInfo.new(functionName, preCallback, postCallback)
         UnsafeHook(hookInfo)
         SetHookInfo(functionName, hookInfo)
     else
-        LogWarn("HooksManager:Hook: A hook for the function already exists. It's better to use a single hook for the same function per mod!\nFunction:", functionName)
+        LogWarn(
+        "HooksManager:Hook: A hook for the function already exists. It's better to use a single hook for the same function per mod!\nFunction:",
+            functionName)
     end
 
     return hookInfo
 end
 
----Return HookInfo reference, which will become Valid after the hook is complete
+---"Async" function that returns HookInfo reference, which will become "Active" after the hook is complete
 ---@param delay integer Delay in milliseconds
 ---@param functionName string
 ---@param preCallback fun(self: UObject, ...)|nil
@@ -169,7 +201,8 @@ end
 ---@return HookInfo? Reference
 function HooksManager:HookWithDelay(delay, functionName, preCallback, postCallback)
     if type(functionName) ~= "string" or functionName == "" then
-        LogError("HooksManager:HookWithDelay: Parameter `functionName` has to be a valid string that contains full function path!")
+        LogError(
+        "HooksManager:HookWithDelay: Parameter `functionName` has to be a valid string that contains full function path!")
         return nil
     end
 
@@ -179,13 +212,15 @@ function HooksManager:HookWithDelay(delay, functionName, preCallback, postCallba
     end
 
     local hookInfo = self:GetHookInfo(functionName)
-    
+
     if IsActiveHook(hookInfo) then
-        LogWarn("HooksManager:HookWithDelay: A hook for the function already exists. It's better to use a single hook for the same function per mod!\nFunction:", functionName)
+        LogWarn(
+        "HooksManager:HookWithDelay: A hook for the function already exists. It's better to use a single hook for the same function per mod!\nFunction:",
+            functionName)
         return hookInfo
     end
 
-    hookInfo = CreateHookInfo(functionName, preCallback, postCallback)
+    hookInfo = HookInfo.new(functionName, preCallback, postCallback)
     SetHookInfo(functionName, hookInfo)
 
     ExecuteWithDelay(delay, function()
@@ -206,7 +241,8 @@ end
 ---@return boolean Success
 function HooksManager:UnhookByFunctionName(functionName)
     if type(functionName) ~= "string" or functionName == "" then
-        LogError("HooksManager:UnhookByFunctionName: Parameter `functionName` has to be a valid string that contains full function path!")
+        LogError(
+        "HooksManager:UnhookByFunctionName: Parameter `functionName` has to be a valid string that contains full function path!")
         return false
     end
 
@@ -224,7 +260,8 @@ end
 ---@return boolean Success
 function HooksManager:Unhook(hookInfo)
     if not hookInfo or type(hookInfo.functionName) ~= "string" then
-        LogError("HooksManager:Unhook: Parameter `hookInfo` has to be a valid object of type `HookInfo` and contain the key `functionName`!")
+        LogError(
+        "HooksManager:Unhook: Parameter `hookInfo` has to be a valid object of type `HookInfo` and contain the key `functionName`!")
         return false
     end
 
