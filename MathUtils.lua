@@ -303,45 +303,6 @@ function TransformToTable(Transform)
     return FTransform(Transform.Translation, Transform.Rotation, Transform.Scale3D)
 end
 
--- FLinearColor --
-------------------
-
----@param R float?
----@param G float?
----@param B float?
----@param A float?
----@return FLinearColor # As table
-function FLinearColor(R, G, B, A)
-    return {
-        R = R or 0.0,
-        G = G or 0.0,
-        B = B or 0.0,
-        A = A or 0.0
-    }
-end
-
----Returns FLinearColor as string format "RGBA: %f, %f, %f, %f"
----@param Color FLinearColor
----@return string
-function LinearColorToString(Color)
-    return string.format("RGBA: %f, %f, %f, %f", Color.R, Color.G, Color.B, Color.A)
-end
-
----Resolves FLinearColor as table
----@param Color FLinearColor
----@return FLinearColor # FLinearColor but as table
-function LinearColorToTable(Color)
-    return FLinearColor(Color.R, Color.G, Color.B, Color.A)
-end
-
----Compares two FLinearColor
----@param Color1 FLinearColor
----@param Color2 FLinearColor
----@return boolean Equal
-function IsLinearColorEqual(Color1, Color2)
-    return Color1 and Color2 and Color1.R == Color2.R and Color1.G == Color2.G and Color1.B == Color2.B and Color1.A == Color2.A
-end
-
 -- Units related functions --
 -----------------------------
 

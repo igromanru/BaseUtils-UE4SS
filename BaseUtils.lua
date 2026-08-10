@@ -6,6 +6,7 @@ if currentDir then
     package.path = package.path .. ";" .. currentDir .. "?.lua"
     require("LuaUtils")
     require("MathUtils")
+    require("LinearColors")
     require("FNames")
     require("DefaultObjects")
     require("StaticClasses")

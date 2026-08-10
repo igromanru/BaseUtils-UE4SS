@@ -1,6 +1,6 @@
 
 ---@type { [string]: FLinearColor }
-local LinearColors = {}
+LinearColors = {}
 
 ---FLinearColor constructor
 ---@param Red float?
@@ -9,15 +9,11 @@ local LinearColors = {}
 ---@param Alpha float?
 ---@return FLinearColor
 function FLinearColor(Red, Green, Blue, Alpha)
-    Red = Red or 1.0
-    Green = Green or 1.0
-    Blue = Blue or 1.0
-    Alpha = Alpha or 1.0
     return {
-        R = Red,
-        G = Green,
-        B = Blue,
-        A = Alpha
+        R = Red or 1.0,
+        G = Green or 1.0,
+        B = Blue or 1.0,
+        A = Alpha or 1.0
     }
 end
 
@@ -32,6 +28,21 @@ LinearColors.Blue = FLinearColor(0, 0, 1, 1)
 ---@return string
 function LinearColorToString(LinearColor)
     return string.format("%f, %f, %f, %f", LinearColor.R, LinearColor.G, LinearColor.B, LinearColor.A)
+end
+
+---Resolves FLinearColor as table
+---@param Color FLinearColor
+---@return FLinearColor # FLinearColor but as table
+function LinearColorToTable(Color)
+    return FLinearColor(Color.R, Color.G, Color.B, Color.A)
+end
+
+---Compares two FLinearColor
+---@param Color1 FLinearColor
+---@param Color2 FLinearColor
+---@return boolean Equal
+function IsLinearColorEqual(Color1, Color2)
+    return Color1 and Color2 and Color1.R == Color2.R and Color1.G == Color2.G and Color1.B == Color2.B and Color1.A == Color2.A
 end
 
 ---Compress FLinearColor to a 64-bit integer, packed as binary string
