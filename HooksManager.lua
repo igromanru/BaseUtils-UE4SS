@@ -169,12 +169,23 @@ end
 
 ---Unregister a hook and reset the HookInfo
 ---@param refHookInfo? HookInfo Keep in mind, that's a reference to the a table in self.hooks table
+---@param removeFromQueue? boolean If true, removes inactive hook from the queue 
 ---@return boolean
-local function UnhookByHookInfo(refHookInfo)
+local function UnhookByHookInfo(refHookInfo, removeFromQueue)
     if not refHookInfo then return false end
 
-    if not HooksManager:IsHookActive(refHookInfo) then
-        LogError("HooksManager: Can't unregister an inactive hook.\nFunction:", refHookInfo.functionName)
+    removeFromQueue = removeFromQueue or false
+
+    local isHookActive = HooksManager:IsHookActive(refHookInfo)
+
+   if removeFromQueue and HooksManager.hooksQueue:Remove(refHookInfo) and not isHookActive then
+        LogInfo("HooksManager: Inactive hook was removed from queue.\nFunction:", refHookInfo.functionName)
+        refHookInfo:Reset()
+        return true
+    end
+
+    if not isHookActive then
+        LogWarn("HooksManager: Can't unregister an inactive hook.\nFunction:", refHookInfo.functionName)
         refHookInfo:Reset()
         return false
     end
@@ -366,8 +377,9 @@ function HooksManager:LoadAssetAndHookAsync(functionName, preCallback, postCallb
 end
 
 ---@param functionName string
+---@param removeFromQueue? boolean If true, removes inactive hook from the queue 
 ---@return boolean Success
-function HooksManager:UnhookByFunctionName(functionName)
+function HooksManager:UnhookByFunctionName(functionName, removeFromQueue)
     if type(functionName) ~= "string" or functionName == "" then
         LogError("HooksManager:UnhookByFunctionName: Parameter `functionName` has to be a valid string that contains full function path!")
         return false
@@ -375,23 +387,39 @@ function HooksManager:UnhookByFunctionName(functionName)
 
     local hookInfo = self:GetHookInfo(functionName)
 
-    if not self:IsHookActive(hookInfo) then
-        LogWarn("HooksManager:UnhookByFunctionName: There is no active hook for the function:", functionName)
-        return false
-    end
-
-    return UnhookByHookInfo(hookInfo)
+    return UnhookByHookInfo(hookInfo, removeFromQueue)
 end
 
 ---@param hookInfo? HookInfo
+---@param removeFromQueue boolean If true, removes inactive hook from the queue 
 ---@return boolean Success
-function HooksManager:Unhook(hookInfo)
-    if not hookInfo or not self:IsHookActive(hookInfo) then
-        LogError("HooksManager:Unhook: Parameter `hookInfo` has to be a valid and active HookInfo object!")
-        return false
+function HooksManager:Unhook(hookInfo, removeFromQueue)
+    if not hookInfo then return false end
+
+    return self:UnhookByFunctionName(hookInfo.functionName, removeFromQueue)
+end
+
+--- Unregister all active hooks
+---@param emptyQueue boolean If set to true, removes all hooks from the queue
+function HooksManager:UnhookAll(emptyQueue)
+    emptyQueue = emptyQueue or false
+
+    if emptyQueue then
+        self.hooksQueue:Clear()
     end
 
-    return self:UnhookByFunctionName(hookInfo.functionName)
+    for _, value in pairs(self.hooks) do
+        UnhookByHookInfo(value)
+    end
+end
+
+--- Unregister all active hooks, empty the queue and remove all HookInfo references
+function HooksManager:FullReset()
+    self:UnhookAll(true)
+
+    for key in pairs(self.hooks) do
+        self.hooks[key] = nil
+    end
 end
 
 return HooksManager
