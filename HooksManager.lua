@@ -17,6 +17,7 @@ local Queue = require("Queue")
 ---@field loadAsset boolean
 ---@field IsActive fun(self: HookInfo): boolean Returns whether this hook is currently active.
 ---@field Reset fun(self: HookInfo)
+---@field ToString fun(self: HookInfo): string
 local HookInfo = {}
 HookInfo.__index = HookInfo
 
@@ -52,6 +53,20 @@ function HookInfo:Reset()
     self.preCallback = nil
     self.postCallback = nil
     self.loadAsset = false
+end
+
+--- Returns HookInfo as formatted string:<br>
+--- `functionName: %s,\npreId: %d,\npostId: %d,\npreCallback type: %s,\npostCallback type: %s,\nloadAsset: %s,\nIsActive: %s`
+---@return string
+function HookInfo:ToString()
+    return string.format("functionName: %s,\npreId: %d,\npostId: %d,\npreCallback type: %s,\npostCallback type: %s,\nloadAsset: %s,\nIsActive: %s",
+            self.functionName,
+            self.preId,
+            self.postId,
+            type(self.preCallback),
+            type(self.postCallback),
+            tostring(self.loadAsset),
+            tostring(self:IsActive()))
 end
 
 ---@class HooksManager
