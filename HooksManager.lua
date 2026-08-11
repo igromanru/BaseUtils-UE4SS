@@ -229,6 +229,25 @@ local function TryHookClientReset()
     end
 end
 
+--- Unhook ClientReset if it was hooked by HooksManager
+---@return boolean Success
+function HooksManager:UnhookClientReset()
+    if IsValidId(clientResetPreId) then
+        local success, errMsd = pcall(UnregisterHook, "/Script/Engine.PlayerController:ClientRestart", clientResetPreId, clientResetPostId)
+
+        if not success then
+            LogError("HooksManager:UnhookClientReset: Failed to unregister ClientRestart hook.\nError:", errMsd)
+            return false
+        end
+
+        clientResetPreId, clientResetPostId = nil, nil
+        return true
+    end
+
+    LogWarn("HooksManager:UnhookClientReset: Couldn't unhook ClientRestart, it isn't hooked!")
+    return false
+end
+
 ---Hook function and register in the hook manager
 ---@param functionName string
 ---@param preCallback fun(self: UObject, ...)|nil
@@ -400,12 +419,13 @@ function HooksManager:Unhook(hookInfo, removeFromQueue)
 end
 
 --- Unregister all active hooks
----@param emptyQueue boolean If set to true, removes all hooks from the queue
+---@param emptyQueue boolean If set to true, removes all hooks from the queue and unhooks the `ClientReset` function
 function HooksManager:UnhookAll(emptyQueue)
     emptyQueue = emptyQueue or false
 
     if emptyQueue then
         self.hooksQueue:Clear()
+        self:UnhookClientReset()
     end
 
     for _, value in pairs(self.hooks) do
