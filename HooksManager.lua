@@ -4,6 +4,8 @@
     Description: Class to automatically handle function hooks
 ]]
 
+-- Important: BaseUtils.lua is required but it's currently loaded through the main.lua into global space.
+
 local Queue = require("Queue")
 
 ---@class HookInfo
@@ -107,29 +109,10 @@ local function SetHookInfo(functionName, hookInfo)
     return hookInfo
 end
 
----Register a hook and update HookInfo with pre and post IDs
----@param refHookInfo? HookInfo Keep in mind, that's a reference to the a table in self.hooks table
----@return HookInfo?
-local function UnsafeHook(refHookInfo)
-    if not refHookInfo then return nil end
-
-    local success, preIdOrErr, postId = pcall(RegisterHook, refHookInfo.functionName, refHookInfo.preCallback, refHookInfo.postCallback)
-
-    if success then
-        refHookInfo.preId = preIdOrErr
-        refHookInfo.postId = postId
-    else
-        refHookInfo:Reset()
-        LogError("HooksManager: Failed to register hook.\nFunction:", refHookInfo.functionName, "\nError:", preIdOrErr)
-    end
-
-    return refHookInfo
-end
-
 ---The function must be executed in a game thread!!!
 ---@param AssetPath string Asset path. Class path will be extracted from it automatically.
 ---@return boolean
-local function PLoadAsset(AssetPath)
+local function TryLoadAsset(AssetPath)
     if IsStringNotEmpty(AssetPath) then
         local classPath = ExtractClassPath(AssetPath)
 
@@ -146,23 +129,50 @@ local function PLoadAsset(AssetPath)
     return false
 end
 
+---Register a hook and update HookInfo with pre and post IDs
+---@param refHookInfo? HookInfo Keep in mind, that's a reference to the a table in self.hooks table
+---@return HookInfo?
+local function HookByHookInfo(refHookInfo)
+    if not refHookInfo then return nil end
+
+    if refHookInfo.loadAsset then
+        TryLoadAsset(refHookInfo.functionName)
+    end
+
+    local success, preIdOrErr, postId = pcall(RegisterHook, refHookInfo.functionName, refHookInfo.preCallback, refHookInfo.postCallback)
+
+    if success then
+        refHookInfo.preId = preIdOrErr
+        refHookInfo.postId = postId
+    else
+        refHookInfo:Reset()
+        LogError("HooksManager: Failed to register hook.\nFunction:", refHookInfo.functionName, "\nError:", preIdOrErr)
+    end
+
+    return refHookInfo
+end
+
 ---Unregister a hook and reset the HookInfo
 ---@param refHookInfo? HookInfo Keep in mind, that's a reference to the a table in self.hooks table
 ---@return boolean
-local function UnsafeUnhook(refHookInfo)
+local function UnhookByHookInfo(refHookInfo)
     if not refHookInfo then return false end
+
+    if not HooksManager:IsHookActive(refHookInfo) then
+        LogError("HooksManager: Can't unregister an inactive hook.\nFunction:", refHookInfo.functionName)
+        refHookInfo:Reset()
+        return false
+    end
 
     local success, error = pcall(UnregisterHook, refHookInfo.functionName, refHookInfo.preId, refHookInfo.postId)
 
-    if success then
-        refHookInfo:Reset()
-        return true
-    else
+    if not success then
         LogError("HooksManager: Failed to unregister hook.\nFunction:", refHookInfo.functionName, "\nError:", error)
-        refHookInfo:Reset()
     end
 
-    return false
+    refHookInfo:Reset()
+
+    return success
 end
 
 ---Callback function for the ClientRestart hook.<br>
@@ -174,18 +184,14 @@ local function OnClientRestart(Context, NewPawn)
         while not HooksManager.hooksQueue:IsEmpty() do
             local hookInfo = HooksManager.hooksQueue:Pop()
 
-            if hookInfo and hookInfo.loadAsset then
-                PLoadAsset(hookInfo.functionName)
-            end
-
-            UnsafeHook(hookInfo)
+            HookByHookInfo(hookInfo)
         end
     end
 end
 
 local clientResetPreId, clientResetPostId = nil, nil
 ---Hooks ClientRestart function if it's not done already
-local function HookClientReset()
+local function TryHookClientReset()
     if not IsValidId(clientResetPreId) then
         local success, preIdOrErr, postId = pcall(RegisterHook, "/Script/Engine.PlayerController:ClientRestart", OnClientRestart)
         if success then
@@ -218,7 +224,7 @@ function HooksManager:Hook(functionName, preCallback, postCallback)
 
     if not self:IsHookActive(hookInfo) then
         hookInfo = HookInfo.new(functionName, preCallback, postCallback)
-        UnsafeHook(hookInfo)
+        HookByHookInfo(hookInfo)
         SetHookInfo(functionName, hookInfo)
     else
         LogWarn("HooksManager:Hook: A hook for the function already exists. It's better to use a single hook for the same function per mod!\nFunction:", functionName)
@@ -255,19 +261,22 @@ function HooksManager:HookWithDelayAsync(delay, functionName, preCallback, postC
     SetHookInfo(functionName, hookInfo)
 
     ExecuteWithDelay(delay, function()
-        UnsafeHook(hookInfo)
+        if hookInfo then
+            HookByHookInfo(hookInfo)
+        end
     end)
 
     return hookInfo
 end
 
----"Async" function, registers function to a queue and returns a reference to HookInfo, which will be hooked next time `ClientRestart` is executed.
----If the `loadAsset` parameter is set to `true`, an attempt will be made to load the function's class with `LoadAsset` before hooking the function.
----@param functionName string
----@param preCallback fun(self: UObject, ...)|nil
----@param postCallback fun(self: UObject, ...)|nil
----@param loadAsset? boolean
----@return HookInfo? Reference
+--- Queues a function hook to be registered during the next `ClientRestart` call.
+--- If `loadAsset` is true, the system will attempt to load the function's parent class 
+--- into memory (via `LoadAsset`) before attaching the hook.
+---@param functionName string The full path/name of the UFunction to hook.
+---@param preCallback fun(self: UObject, ...)|nil The callback to execute before the original function runs.
+---@param postCallback fun(self: UObject, ...)|nil The callback to execute after the original function finishes.
+---@param loadAsset? boolean If `true`, attempts to load the function's class into memory before hooking. (Default: `false`)
+---@return HookInfo? hookReference A reference to the queued hook info.
 function HooksManager:HookOnClientRestartAsync(functionName, preCallback, postCallback, loadAsset)
     if type(functionName) ~= "string" or functionName == "" then
         LogError("HooksManager:HookOnClientRestart: Parameter `functionName` has to be a valid string that contains full function path!")
@@ -279,17 +288,17 @@ function HooksManager:HookOnClientRestartAsync(functionName, preCallback, postCa
         return nil
     end
 
-    HookClientReset()
+    TryHookClientReset()
 
     local hookInfo = self:GetHookInfo(functionName)
 
     if self:IsHookActive(hookInfo) then
-        LogWarn("HooksManager:HookOnClientRestart: A hook for the function already exists. It's better to use a single hook for the same function per mod!\nFunction:", functionName)
+        LogWarn("HooksManager:HookOnClientRestart: A hook for the function already exists. Use a single hook for the same function per mod!\nFunction:", functionName)
         return hookInfo
     end
 
     if IsHookInfoInQueue(hookInfo) then
-        LogWarn("HooksManager:HookOnClientRestart: The hook for the function is already in the queue!\nFunction:", functionName)
+        LogWarn("HooksManager:HookOnClientRestart: A hook for the function is already in the queue!\nFunction:", functionName)
         return hookInfo
     end
 
@@ -302,37 +311,39 @@ function HooksManager:HookOnClientRestartAsync(functionName, preCallback, postCa
     return hookInfo
 end
 
----"Async" function, returns a reference to HookInfo, which will be hooked in the next possible game thread execution.<br>
----An attempt will be made to load the function's class with `LoadAsset` before hooking the function.
----@param functionName string
----@param preCallback fun(self: UObject, ...)|nil
----@param postCallback fun(self: UObject, ...)|nil
----@return HookInfo? Reference
-function HooksManager:HookAutoLoadAssetAsync(functionName, preCallback, postCallback)
+--- Queues a function hook to be registered during the next available game thread execution.
+---
+--- Prior to registering the hook, this function will automatically attempt to load 
+--- the target function's parent class into memory via `LoadAsset`.
+---@param functionName string The full path/name of the UFunction to hook.
+---@param preCallback fun(self: UObject, ...)|nil The callback to execute before the original function runs.
+---@param postCallback fun(self: UObject, ...)|nil The callback to execute after the original function finishes.
+---@return HookInfo? hookReference A reference to the queued hook info.
+function HooksManager:LoadAssetAndHookAsync(functionName, preCallback, postCallback)
     if type(functionName) ~= "string" or functionName == "" then
-        LogError("HooksManager:HookAutoLoadAssetAsync: Parameter `functionName` has to be a valid string that contains full function path!")
+        LogError("HooksManager:LoadAssetAndHookAsync: Parameter `functionName` has to be a valid string that contains full function path!")
         return nil
     end
 
     if type(preCallback) ~= "function" and type(postCallback) ~= "function" then
-        LogError("HooksManager:HookAutoLoadAssetAsync: Either `preCallback` or `postCallback` has to be set!")
+        LogError("HooksManager:LoadAssetAndHookAsync: Either `preCallback` or `postCallback` has to be set!")
         return nil
     end
 
     local hookInfo = self:GetHookInfo(functionName)
 
     if self:IsHookActive(hookInfo) then
-        LogWarn("HooksManager:HookAutoLoadAssetAsync: A hook for the function already exists. It's better to use a single hook for the same function per mod!\nFunction:", functionName)
+        LogWarn("HooksManager:LoadAssetAndHookAsync: A hook for the function already exists. Use a single hook for the same function per mod!\nFunction:", functionName)
         return hookInfo
     end
 
-    hookInfo = HookInfo.new(functionName, preCallback, postCallback, -1, -1, true)
+    hookInfo = HookInfo.new(functionName, preCallback, postCallback)
+    hookInfo.loadAsset = true
     SetHookInfo(functionName, hookInfo)
 
     ExecuteInGameThread(function()
         if hookInfo then
-            PLoadAsset(hookInfo.functionName)
-            UnsafeHook(hookInfo)
+            HookByHookInfo(hookInfo)
         end
     end)
 
@@ -354,13 +365,13 @@ function HooksManager:UnhookByFunctionName(functionName)
         return false
     end
 
-    return UnsafeUnhook(hookInfo)
+    return UnhookByHookInfo(hookInfo)
 end
 
 ---@param hookInfo? HookInfo
 ---@return boolean Success
 function HooksManager:Unhook(hookInfo)
-    if not self:IsHookActive(hookInfo) then
+    if not hookInfo or not self:IsHookActive(hookInfo) then
         LogError("HooksManager:Unhook: Parameter `hookInfo` has to be a valid and active HookInfo object!")
         return false
     end
