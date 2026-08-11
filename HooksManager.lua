@@ -60,13 +60,13 @@ end
 ---@return string
 function HookInfo:ToString()
     return string.format("functionName: %s,\npreId: %d,\npostId: %d,\npreCallback type: %s,\npostCallback type: %s,\nloadAsset: %s,\nIsActive: %s",
-            self.functionName,
-            self.preId,
-            self.postId,
-            type(self.preCallback),
-            type(self.postCallback),
-            tostring(self.loadAsset),
-            tostring(self:IsActive()))
+        self.functionName,
+        self.preId,
+        self.postId,
+        type(self.preCallback),
+        type(self.postCallback),
+        tostring(self.loadAsset),
+        tostring(self:IsActive()))
 end
 
 ---@class HooksManager
@@ -169,7 +169,7 @@ end
 
 ---Unregister a hook and reset the HookInfo
 ---@param refHookInfo? HookInfo Keep in mind, that's a reference to the a table in self.hooks table
----@param removeFromQueue? boolean If true, removes inactive hook from the queue 
+---@param removeFromQueue? boolean If true, removes inactive hook from the queue. Default: `false`
 ---@return boolean
 local function UnhookByHookInfo(refHookInfo, removeFromQueue)
     if not refHookInfo then return false end
@@ -178,7 +178,7 @@ local function UnhookByHookInfo(refHookInfo, removeFromQueue)
 
     local isHookActive = HooksManager:IsHookActive(refHookInfo)
 
-   if removeFromQueue and HooksManager.hooksQueue:Remove(refHookInfo) and not isHookActive then
+    if removeFromQueue and HooksManager.hooksQueue:Remove(refHookInfo) and not isHookActive then
         LogInfo("HooksManager: Inactive hook was removed from queue.\nFunction:", refHookInfo.functionName)
         refHookInfo:Reset()
         return true
@@ -187,7 +187,7 @@ local function UnhookByHookInfo(refHookInfo, removeFromQueue)
     if not isHookActive then
         LogWarn("HooksManager: Can't unregister an inactive hook.\nFunction:", refHookInfo.functionName)
         refHookInfo:Reset()
-        return false
+        return true
     end
 
     local success, error = pcall(UnregisterHook, refHookInfo.functionName, refHookInfo.preId, refHookInfo.postId)
@@ -296,7 +296,7 @@ function HooksManager:HookWithDelayAsync(delay, functionName, preCallback, postC
 end
 
 --- Queues a function hook to be registered during the next `ClientRestart` call.
---- If `loadAsset` is true, the system will attempt to load the function's parent class 
+--- If `loadAsset` is true, the system will attempt to load the function's parent class
 --- into memory (via `LoadAsset`) before attaching the hook.
 ---@param functionName string The full path/name of the UFunction to hook.
 ---@param preCallback fun(self: UObject, ...)|nil The callback to execute before the original function runs.
@@ -339,7 +339,7 @@ end
 
 --- Queues a function hook to be registered during the next available game thread execution.
 ---
---- Prior to registering the hook, this function will automatically attempt to load 
+--- Prior to registering the hook, this function will automatically attempt to load
 --- the target function's parent class into memory via `LoadAsset`.
 ---@param functionName string The full path/name of the UFunction to hook.
 ---@param preCallback fun(self: UObject, ...)|nil The callback to execute before the original function runs.
@@ -377,7 +377,7 @@ function HooksManager:LoadAssetAndHookAsync(functionName, preCallback, postCallb
 end
 
 ---@param functionName string
----@param removeFromQueue? boolean If true, removes inactive hook from the queue 
+---@param removeFromQueue? boolean If true, removes inactive hook from the queue. Default: `false`
 ---@return boolean Success
 function HooksManager:UnhookByFunctionName(functionName, removeFromQueue)
     if type(functionName) ~= "string" or functionName == "" then
@@ -391,7 +391,7 @@ function HooksManager:UnhookByFunctionName(functionName, removeFromQueue)
 end
 
 ---@param hookInfo? HookInfo
----@param removeFromQueue boolean If true, removes inactive hook from the queue 
+---@param removeFromQueue? boolean If true, removes inactive hook from the queue. Default: `false`
 ---@return boolean Success
 function HooksManager:Unhook(hookInfo, removeFromQueue)
     if not hookInfo then return false end
