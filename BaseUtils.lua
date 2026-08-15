@@ -127,8 +127,8 @@ end
 -- Exported functions --
 ------------------------
 
----Ultimate check if an object is not nil and valid
----@param object UObject
+---Ultimate check if an LocalObject/RemoteObject (UE4SS base classes) is not nil and valid
+---@param object UObject|FName
 ---@return boolean Valid
 function IsValid(object)
     return object ~= nil and object.IsValid ~= nil and object:IsValid()
@@ -147,6 +147,14 @@ end
 ---@return boolean Valid
 function IsSameObject(object1, object2)
     return IsValid(object1) and IsValid(object2) and object1:GetAddress() == object2:GetAddress()
+end
+
+---Compares two FNames by their ComparisonIndex
+---@param name1 FName
+---@param name2 FName
+---@return boolean Valid
+function IsSameName(name1, name2)
+    return IsValid(name1) and IsValid(name2) and name1:GetComparisonIndex() == name2:GetComparisonIndex()
 end
 
 ---Returns always true unless client joins a server
