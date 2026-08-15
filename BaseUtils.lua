@@ -126,15 +126,15 @@ end
 -- Exported functions --
 ------------------------
 
----Ultimate check if an LocalObject/RemoteObject (UE4SS base classes) is not nil and valid
----@param object UObject|FName
+---Ultimate check if an object is not nil and valid
+---@param object UObject
 ---@return boolean Valid
 function IsValid(object)
     return object ~= nil and object.IsValid ~= nil and object:IsValid()
 end
 
----Ultimate check if an LocalObject/RemoteObject (UE4SS base classes) isn't valid in any way
----@param object UObject|FName
+---Ultimate check if an object isn't valid in any way
+---@param object UObject
 ---@return boolean NotValid
 function IsNotValid(object)
     return not IsValid(object)
@@ -153,14 +153,14 @@ end
 ---@param name2 FName
 ---@return boolean Valid
 function IsSameName(name1, name2)
-    return IsValid(name1) and IsValid(name2) and name1:GetComparisonIndex() == name2:GetComparisonIndex()
+    return name1 ~= nil and name2 ~= nil and name1:GetComparisonIndex() == name2:GetComparisonIndex()
 end
 
 ---Compares two FNames by their ComparisonIndex
 ---@param name FName
 ---@return boolean Valid
 function IsNameNone(name)
-    return IsNotValid(name) or name:GetComparisonIndex() == 0
+    return name == nil or name:GetComparisonIndex() == 0
 end
 
 ---Returns always true unless client joins a server
