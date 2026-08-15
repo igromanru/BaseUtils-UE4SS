@@ -113,14 +113,13 @@ end
 function ExtractClassPath(Path)
     local startIdx = string.find(Path, "/")
     local endIdx = string.find(Path, ":")
-    
+
     if startIdx and endIdx then
         return string.sub(Path, startIdx, endIdx - 1)
-    
     elseif startIdx then
         return string.sub(Path, startIdx)
     end
-    
+
     return Path
 end
 
@@ -134,8 +133,8 @@ function IsValid(object)
     return object ~= nil and object.IsValid ~= nil and object:IsValid()
 end
 
----Ultimate check if an object isn't valid in any way
----@param object UObject
+---Ultimate check if an LocalObject/RemoteObject (UE4SS base classes) isn't valid in any way
+---@param object UObject|FName
 ---@return boolean NotValid
 function IsNotValid(object)
     return not IsValid(object)
@@ -155,6 +154,13 @@ end
 ---@return boolean Valid
 function IsSameName(name1, name2)
     return IsValid(name1) and IsValid(name2) and name1:GetComparisonIndex() == name2:GetComparisonIndex()
+end
+
+---Compares two FNames by their ComparisonIndex
+---@param name FName
+---@return boolean Valid
+function IsNameNone(name)
+    return IsNotValid(name) or name:GetComparisonIndex() == 0
 end
 
 ---Returns always true unless client joins a server
