@@ -5,7 +5,7 @@ import fnmatch
 import subprocess
 import stat
 
-ITEMS_TO_REMOVE = ['.git', '.git*', '*.gitignore', '*.gitattributes', '*.gitmodules', '*.md', '*.md', '*.json', 'nexusmods', 'AFUtilsDebug.lua', 'LogDebug.lua']
+ITEMS_TO_REMOVE = ['.git', '.git*', '*.gitignore', '*.gitattributes', '*.gitmodules', '*.editorconfig', '*.md', '*.md', '*.json', 'nexusmods', 'AFUtilsDebug.lua', 'LogDebug.lua']
 
 def remove_specified_files(directory):
     for root, dirs, files in os.walk(directory, topdown=False):
