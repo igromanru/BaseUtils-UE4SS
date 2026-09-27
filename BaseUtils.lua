@@ -186,8 +186,8 @@ end
 ---Returns true if local player is the host / has authority
 ---@return boolean
 function IsHost()
-    local word = GetWorld()
-    return IsValid(word) and IsValid(word.AuthorityGameMode)
+    local gameState = GetGameStateBase()
+    return IsValid(gameState) and gameState.Role == 3 --- ENetRole::ROLE_Authority
 end
 
 ---Check if an AActor has Authority
